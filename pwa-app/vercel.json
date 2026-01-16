@@ -2,9 +2,19 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "functions": {
+    "api/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
-      "source": "/((?!assets|icons|sql-wasm.wasm|sw.js|workbox-.*|manifest.webmanifest|registerSW.js).*)",
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/((?!api|assets|icons|sql-wasm.wasm|sw.js|workbox-.*|manifest.webmanifest|registerSW.js).*)",
       "destination": "/index.html"
     }
   ],

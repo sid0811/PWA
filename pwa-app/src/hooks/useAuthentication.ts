@@ -132,7 +132,11 @@ export const useAuthentication = () => {
 
       try {
         // 2nd API
+        console.log('2nd API - Calling with headers:', Object.keys(headers2));
         const takeresp = await Apis.postAuthLogin(headers2);
+        console.log('2nd API - Full response:', takeresp);
+        console.log('2nd API - Token type:', typeof takeresp?.Token);
+        console.log('2nd API - Token value:', takeresp?.Token ? takeresp.Token.substring(0, 50) + '...' : 'undefined');
 
         let generatedOTP = await generateRandomOTP();
         const otpHeader = {
@@ -160,10 +164,18 @@ export const useAuthentication = () => {
           alert(takeresp?.Message);
           return;
         } else {
-          const decodedResponse: DecodedResponse = jwtDecode(takeresp?.Token);
+          // Validate token before decoding
+          if (!takeresp?.Token || typeof takeresp.Token !== 'string') {
+            console.error('2nd API - Invalid token:', takeresp);
+            loaderState && loaderState(false);
+            alert('Login failed: Invalid response from server. Token not received.');
+            return;
+          }
+
+          const decodedResponse: DecodedResponse = jwtDecode(takeresp.Token);
           console.log(
             '2nd api message decodedResponse ===>',
-            takeresp?.Message,
+            decodedResponse,
           );
 
           setJWTToken(takeresp?.Token);

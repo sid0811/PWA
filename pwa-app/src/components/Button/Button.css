@@ -1,0 +1,157 @@
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  font-family: inherit;
+}
+
+/* Sizes */
+.app-button--small {
+  height: 32px;
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-sm);
+}
+
+.app-button--medium {
+  height: 40px;
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-default);
+}
+
+.app-button--large {
+  height: 48px;
+  padding: 0 var(--spacing-xl);
+  font-size: var(--font-md);
+}
+
+/* Variants */
+.app-button--primary {
+  background-color: #362828;
+  color: white;
+  border: 2px solid #362828;
+}
+
+.app-button--primary:hover:not(:disabled) {
+  background-color: #4a3838;
+  border-color: #4a3838;
+}
+
+.app-button--primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.app-button--secondary {
+  background-color: #6C3779;
+  color: white;
+  border: 2px solid #6C3779;
+}
+
+.app-button--secondary:hover:not(:disabled) {
+  background-color: #470C55;
+  border-color: #470C55;
+}
+
+.app-button--outline {
+  background-color: transparent;
+  color: #6C3779;
+  border: 2px solid #6C3779;
+}
+
+.app-button--outline:hover:not(:disabled) {
+  background-color: rgba(108, 55, 121, 0.1);
+}
+
+.app-button--text {
+  background-color: transparent;
+  color: #6C3779;
+  border: none;
+}
+
+.app-button--text:hover:not(:disabled) {
+  background-color: rgba(108, 55, 121, 0.1);
+}
+
+.app-button--danger {
+  background-color: #C62828;
+  color: white;
+  border: 2px solid #C62828;
+}
+
+.app-button--danger:hover:not(:disabled) {
+  background-color: #B71C1C;
+  border-color: #B71C1C;
+}
+
+/* Full Width */
+.app-button--fullwidth {
+  width: 100%;
+}
+
+/* Disabled */
+.app-button--disabled,
+.app-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading */
+.app-button--loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.app-button__spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: button-spin 1s linear infinite;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Icons */
+.app-button__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-button__icon--left {
+  margin-right: var(--spacing-xs);
+}
+
+.app-button__icon--right {
+  margin-left: var(--spacing-xs);
+}
+
+/* Dark Mode */
+.app-button--dark.app-button--outline {
+  color: white;
+  border-color: white;
+}
+
+.app-button--dark.app-button--outline:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-button--dark.app-button--text {
+  color: white;
+}
+
+.app-button--dark.app-button--text:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+}

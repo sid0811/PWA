@@ -25,8 +25,25 @@ const createApiClient = async (): Promise<AxiosInstance> => {
 
     // Interceptor to add target URL header and modify request
     client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-      // Build the full target URL
-      const targetUrl = clientBaseURL + (config.url || '');
+      // Build the full target URL with query params
+      let targetUrl = clientBaseURL + (config.url || '');
+
+      // If there are params, serialize them and append to target URL
+      if (config.params && Object.keys(config.params).length > 0) {
+        const searchParams = new URLSearchParams();
+        for (const [key, value] of Object.entries(config.params)) {
+          if (value !== undefined && value !== null) {
+            searchParams.append(key, String(value));
+          }
+        }
+        const queryString = searchParams.toString();
+        if (queryString) {
+          targetUrl += (targetUrl.includes('?') ? '&' : '?') + queryString;
+        }
+        // Clear params since they're now in the target URL
+        config.params = undefined;
+      }
+
       config.headers['x-target-url'] = targetUrl;
       config.url = ''; // Clear URL since we're using proxy
       return config;

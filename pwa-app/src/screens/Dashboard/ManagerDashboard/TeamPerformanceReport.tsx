@@ -206,17 +206,30 @@ const TeamPerformanceReport = () => {
   const [summaryData, setSummaryData] = useState<PerformanceItem[]>([]);
   const [showingCachedData, setShowingCachedData] = useState(false);
   const [_isPerformanceReportShown, setIsPerformanceReportShown] = useState(false);
+  const [hasFetchedSummary, setHasFetchedSummary] = useState(false);
 
   const MIN_DATE = moment().subtract(90, 'days');
 
   /**
    * Fetch team performance summary from API
    */
-  const fetchTeamSummary = useCallback(async () => {
+  const fetchTeamSummary = useCallback(async (force = false) => {
+    // Skip if already fetched for this date/report type (unless forced)
+    if (hasFetchedSummary && !force) {
+      console.log('Team summary already fetched - skipping');
+      return;
+    }
+
+    if (!userId) {
+      console.log('No userId - skipping team summary fetch');
+      return;
+    }
+
     if (isNetConnected === true || isNetConnected === null) {
       setShowingCachedData(false);
       setIsPerformanceReportShown(false);
       setIsLoading(true);
+      setHasFetchedSummary(true);
       try {
         const data = await getTeamPerfomanceSummary(
           userId,
@@ -249,7 +262,7 @@ const TeamPerformanceReport = () => {
       // Use cached data if available
       handleOfflineMode();
     }
-  }, [userId, selectedDate, isTeamReport, isNetConnected, syncFlag]);
+  }, [userId, selectedDate, isTeamReport, isNetConnected, hasFetchedSummary, setCachedTeamSummaryData]);
 
   /**
    * Handle offline mode - use cached data
@@ -264,11 +277,24 @@ const TeamPerformanceReport = () => {
     }
   };
 
+  // Initial fetch when userId is available
   useEffect(() => {
-    if (userId) {
+    if (userId && !hasFetchedSummary) {
       fetchTeamSummary();
     }
-  }, [fetchTeamSummary, selectedDate, isTeamReport, userId]);
+  }, [userId, hasFetchedSummary, fetchTeamSummary]);
+
+  // Reset fetch flag when date or report type changes
+  useEffect(() => {
+    setHasFetchedSummary(false);
+  }, [selectedDate, isTeamReport]);
+
+  // Refresh on sync
+  useEffect(() => {
+    if (syncFlag && hasFetchedSummary) {
+      setHasFetchedSummary(false);
+    }
+  }, [syncFlag]);
 
   /**
    * Toggle detailed performance view

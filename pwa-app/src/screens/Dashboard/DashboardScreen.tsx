@@ -44,7 +44,7 @@ function DashboardScreen() {
   const {
     syncFlag,
     isMultiDivision,
-    lastExecutionTime,
+    lastExecutionTime: _lastExecutionTime,
     setIsLogin,
     setSyncFlag,
   } = useGlobleAction();
@@ -71,6 +71,7 @@ function DashboardScreen() {
   const [dayUserEnd, setDayUserEnd] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [hasFetchedDashboard, setHasFetchedDashboard] = useState(false);
 
   /**
    * Load initial dashboard data
@@ -119,18 +120,33 @@ function DashboardScreen() {
   /**
    * Fetch dashboard graph data from API
    */
-  const fetchDashboardGraphData = useCallback(async () => {
+  const fetchDashboardGraphData = useCallback(async (force = false) => {
+    // Prevent multiple fetches
+    if (hasFetchedDashboard && !force) {
+      console.log('Dashboard data already fetched - skipping');
+      return;
+    }
+
     if (!isNetConnected && isNetConnected !== null) {
       console.log('Offline - skipping dashboard graph fetch');
       return;
     }
 
+    // Skip if no userId
+    if (!userId) {
+      console.log('No userId - skipping dashboard graph fetch');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setHasFetchedDashboard(true);
+      console.log('Fetching dashboard data for userId:', userId);
       const data = await dashGraph({
         UserId: userId,
         UOM: '', // PWA: UOM will be fetched from settings when implemented
       });
+      console.log('Dashboard data received:', data ? 'success' : 'empty');
 
       if (data) {
         // Update redux state with fetched data
@@ -153,12 +169,26 @@ function DashboardScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, isNetConnected, setSalesTrend, setUserDetails, setConsentApiVersion, setConsentAppVersion]);
+  }, [userId, isNetConnected, hasFetchedDashboard, setSalesTrend, setUserDetails, setConsentApiVersion, setConsentAppVersion]);
 
+  // Initial data load - only once when component mounts
   useEffect(() => {
     loadDashboardData();
-    fetchDashboardGraphData();
-  }, [syncFlag, lastExecutionTime, loadDashboardData, fetchDashboardGraphData]);
+  }, [loadDashboardData]);
+
+  // Fetch dashboard data when userId is available
+  useEffect(() => {
+    if (userId && !hasFetchedDashboard) {
+      fetchDashboardGraphData();
+    }
+  }, [userId, hasFetchedDashboard, fetchDashboardGraphData]);
+
+  // Refresh data when sync flag changes (user initiated sync)
+  useEffect(() => {
+    if (syncFlag && hasFetchedDashboard) {
+      setHasFetchedDashboard(false);
+    }
+  }, [syncFlag]);
 
   /**
    * Handle manual sync

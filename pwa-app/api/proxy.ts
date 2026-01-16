@@ -50,17 +50,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('Target response status:', response.status);
 
-    // Get response data
+    // Get response data - always try JSON first since some APIs return JSON with wrong content-type
     const contentType = response.headers.get('content-type') || '';
     let data;
+    const responseText = await response.text();
 
-    if (contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      data = await response.text();
+    // Try to parse as JSON first, regardless of content-type
+    try {
+      data = JSON.parse(responseText);
+      console.log('Response parsed as JSON');
+    } catch {
+      // If JSON parse fails, use as text
+      data = responseText;
+      console.log('Response kept as text');
     }
 
     console.log('Response data type:', typeof data);
+    console.log('Response content-type:', contentType);
 
     // Forward response headers (skip problematic ones)
     const skipResponseHeaders = ['content-encoding', 'transfer-encoding', 'connection'];

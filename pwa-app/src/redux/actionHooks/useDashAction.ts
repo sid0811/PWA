@@ -1,4 +1,5 @@
 import {useDispatch, useSelector} from 'react-redux';
+import {useCallback} from 'react';
 import {
   setCollection,
   setShowCollection,
@@ -19,12 +20,12 @@ import {
 import type {RootState} from '../store';
 
 type DashActionReturn = {
-  setIsCollectionVisible?: (payload: any) => void;
-  setCollectionData?: (payload: any) => void;
-  setMarketCallData?: (payload: any) => void;
-  setSalesTrend?: (payload: any) => void;
-  setTargetCalls?: (payload: any) => void;
-  setUserDetails?: (payload: any) => void;
+  setIsCollectionVisible: (payload: any) => void;
+  setCollectionData: (payload: any) => void;
+  setMarketCallData: (payload: any) => void;
+  setSalesTrend: (payload: any) => void;
+  setTargetCalls: (payload: any) => void;
+  setUserDetails: (payload: any) => void;
   CollectionStatus: any;
   CollectionVisible: any;
   MarketCalls: any;
@@ -32,29 +33,29 @@ type DashActionReturn = {
   Target: any;
   UserDetails: any;
   // Modal
-  setAttendanceActivity?: (payload: string) => void;
-  setSelectedAreaDash?: (payload: string | number) => void;
+  setAttendanceActivity: (payload: string) => void;
+  setSelectedAreaDash: (payload: string | number) => void;
   AttendActivity: string;
   SelectedArea: string;
-  setSelectedDivision?: (payload: any) => void;
+  setSelectedDivision: (payload: any) => void;
   SelectedDivison: any;
   AttendanceIn: boolean;
-  setIsAttDone?: (payload: boolean) => void;
+  setIsAttDone: (payload: boolean) => void;
   AttendanceOut: boolean;
-  setIsAttendOut?: (payload: boolean) => void;
-  setBase64Strings?: (payload: string) => void;
+  setIsAttendOut: (payload: boolean) => void;
+  setBase64Strings: (payload: string) => void;
   base64: string;
   ConsentApiVersion: string;
-  setConsentApiVersion?: (payload: string) => void;
+  setConsentApiVersion: (payload: string) => void;
   ConsentAppVersion: string;
-  setConsentAppVersion?: (payload: string) => void;
+  setConsentAppVersion: (payload: string) => void;
   cachedTeamSummary: {
     data: any[];
     timestamp: string;
     isTeamReport: boolean;
     date: string;
   } | null;
-  setCachedTeamSummaryData?: (payload: any) => void;
+  setCachedTeamSummaryData: (payload: any) => void;
 };
 
 /**
@@ -64,66 +65,67 @@ type DashActionReturn = {
 export const useDashAction = (): DashActionReturn => {
   const dispatch = useDispatch();
 
-  const setCollectionData = (payload: any) => {
+  // Memoize all setter functions to prevent re-renders
+  const setCollectionData = useCallback((payload: any) => {
     dispatch(setCollection(payload));
-  };
+  }, [dispatch]);
 
-  const setIsCollectionVisible = (payload: any) => {
+  const setIsCollectionVisible = useCallback((payload: any) => {
     dispatch(setShowCollection(payload));
-  };
+  }, [dispatch]);
 
-  const setMarketCallData = (payload: any) => {
+  const setMarketCallData = useCallback((payload: any) => {
     dispatch(setMarketdata(payload));
-  };
+  }, [dispatch]);
 
-  const setSalesTrend = (payload: any) => {
+  const setSalesTrend = useCallback((payload: any) => {
     dispatch(setSalesData(payload));
-  };
+  }, [dispatch]);
 
-  const setTargetCalls = (payload: any) => {
+  const setTargetCalls = useCallback((payload: any) => {
     dispatch(setTargetData(payload));
-  };
+  }, [dispatch]);
 
-  const setUserDetails = (payload: any) => {
+  const setUserDetails = useCallback((payload: any) => {
     dispatch(setUserDetail(payload));
-  };
+  }, [dispatch]);
 
   // Modal
-  const setAttendanceActivity = (payload: string) => {
+  const setAttendanceActivity = useCallback((payload: string) => {
     dispatch(setAttendActivity(payload));
-  };
+  }, [dispatch]);
 
-  const setSelectedAreaDash = (payload: number | string) => {
+  const setSelectedAreaDash = useCallback((payload: number | string) => {
     dispatch(setSelectedArea(payload));
-  };
+  }, [dispatch]);
 
-  const setSelectedDivision = (payload: any) => {
+  const setSelectedDivision = useCallback((payload: any) => {
     dispatch(setDivisionSelected(payload));
-  };
+  }, [dispatch]);
 
-  const setIsAttDone = (payload: boolean) => {
+  const setIsAttDone = useCallback((payload: boolean) => {
     dispatch(setAttendanceDone(payload));
-  };
+  }, [dispatch]);
 
-  const setIsAttendOut = (payload: boolean) => {
+  const setIsAttendOut = useCallback((payload: boolean) => {
     dispatch(setAttendanceOut(payload));
-  };
+  }, [dispatch]);
 
-  const setBase64Strings = (payload: string) => {
+  const setBase64Strings = useCallback((payload: string) => {
     dispatch(setBase64String(payload));
-  };
+  }, [dispatch]);
 
-  const setConsentApiVersion = (payload: string) => {
+  const setConsentApiVersion = useCallback((payload: string) => {
     dispatch(setApiVersion(payload));
-  };
+  }, [dispatch]);
 
-  const setConsentAppVersion = (payload: string) => {
+  const setConsentAppVersion = useCallback((payload: string) => {
     dispatch(setAppVersion(payload));
-  };
+  }, [dispatch]);
 
-  const setCachedTeamSummaryData = (payload: any) => {
+  const setCachedTeamSummaryData = useCallback((payload: any) => {
     dispatch(setCachedTeamSummary(payload));
-  };
+  }, [dispatch]);
 
   // Selectors
   const CollectionStatus = useSelector(

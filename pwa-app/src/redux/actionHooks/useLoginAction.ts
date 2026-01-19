@@ -1,4 +1,5 @@
 import {useDispatch} from 'react-redux';
+import {useCallback} from 'react';
 import {
   setEnteredUName,
   setUserPassword,
@@ -16,25 +17,25 @@ import {
 import {useAppSelector} from '../store';
 
 type Function = {
-  setUserPass?: any;
-  setEnterUserName?: any;
-  setEnteredClientCode?: any;
-  setClientBasedURL?: any;
-  setLoginLoader?: any;
+  setUserPass: (payload: string) => void;
+  setEnterUserName: (payload: string) => void;
+  setEnteredClientCode: (payload: string) => void;
+  setClientBasedURL: (payload: string) => void;
+  setLoginLoader: (payload: boolean) => void;
   enteredUserName: string;
   userPassword: string;
   savedClientCode: string;
   clientBaseURL: string;
   loginLoading: boolean;
-  setUserName: any;
-  setUserId: any;
-  setDeviceId: any;
-  setAreaId: any;
+  setUserName: (payload: string | number | undefined) => void;
+  setUserId: (payload: string | number | undefined) => void;
+  setDeviceId: (payload: string | number | undefined) => void;
+  setAreaId: (payload: string | number | undefined) => void;
   userName: string;
   userId: string;
   deviceId: string;
   areaId: string;
-  setJWTToken: any;
+  setJWTToken: (payload: any) => void;
   token: any;
   setSavedAppendedApiVersionAction: (payload: string) => void;
   savedAppendApiVersion: string;
@@ -49,49 +50,56 @@ type Function = {
 export const useLoginAction = (): Function => {
   const dispatch = useDispatch();
 
-  const setEnterUserName = (payload: string) => {
+  // Memoize all setter functions to prevent re-renders
+  const setEnterUserName = useCallback((payload: string) => {
     dispatch(setEnteredUName(payload));
-  };
+  }, [dispatch]);
 
-  const setUserPass = (payload: string) => {
+  const setUserPass = useCallback((payload: string) => {
     dispatch(setUserPassword(payload));
-  };
+  }, [dispatch]);
 
-  const setEnteredClientCode = (payload: string) => {
+  const setEnteredClientCode = useCallback((payload: string) => {
     dispatch(setClientCode(payload));
-  };
-  const setClientBasedURL = (payload: string) => {
+  }, [dispatch]);
+
+  const setClientBasedURL = useCallback((payload: string) => {
     dispatch(setClientBaseURL(payload));
-  };
-  const setLoginLoader = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setLoginLoader = useCallback((payload: boolean) => {
     dispatch(setLoginLoading(payload));
-  };
+  }, [dispatch]);
 
   //API Response
-  const setUserName = (payload: string | number) => {
+  const setUserName = useCallback((payload: string | number | undefined) => {
     dispatch(setUName(payload));
-  };
-  const setUserId = (payload: string | number) => {
+  }, [dispatch]);
+
+  const setUserId = useCallback((payload: string | number | undefined) => {
     dispatch(setUId(payload));
-  };
-  const setDeviceId = (payload: string | number) => {
+  }, [dispatch]);
+
+  const setDeviceId = useCallback((payload: string | number | undefined) => {
     dispatch(setDevId(payload));
-  };
-  const setAreaId = (payload: string | number) => {
+  }, [dispatch]);
+
+  const setAreaId = useCallback((payload: string | number | undefined) => {
     dispatch(setAreaaId(payload));
-  };
-  const setJWTToken = (payload: any) => {
+  }, [dispatch]);
+
+  const setJWTToken = useCallback((payload: any) => {
     dispatch(setToken(payload));
-  };
+  }, [dispatch]);
 
   //#region--------------API VERSION------------
-  const setSavedApiVersionAction = (payload: string) => {
+  const setSavedApiVersionAction = useCallback((payload: string) => {
     dispatch(setSavedApiVersion(payload));
-  };
+  }, [dispatch]);
 
-  const setSavedAppendedApiVersionAction = (payload: string) => {
+  const setSavedAppendedApiVersionAction = useCallback((payload: string) => {
     dispatch(setSavedAppendedApiVersion(payload));
-  };
+  }, [dispatch]);
   //#endregion
 
   const enteredUserName = useAppSelector(

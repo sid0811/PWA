@@ -1,23 +1,20 @@
 import React from 'react';
-//import {Text} from 'react-native-svg';
-// import Loader from './Loader';
 
 const Loader = ({visible = false}) => {
   if (!visible) return null;
 
   const overlayStyle: React.CSSProperties = {
-    //   flex:1,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     height: '100%',
-    opacity: 0.7,
-    position: 'absolute',
+    position: 'fixed',
     width: '100%',
-    zIndex: 1,
+    zIndex: 9999,
     alignItems: 'center',
-    justifyContent: 'center', // Center content vertically
+    justifyContent: 'center',
     display: 'flex',
     top: 0,
     left: 0,
+    pointerEvents: 'all',
   };
 
   const spinnerStyle: React.CSSProperties = {

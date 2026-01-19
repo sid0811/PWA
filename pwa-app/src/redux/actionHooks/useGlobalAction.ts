@@ -1,4 +1,5 @@
 import {useDispatch} from 'react-redux';
+import {useCallback} from 'react';
 import {
   setIsLoggedIn,
   setIsDarkMode,
@@ -103,109 +104,128 @@ type Function = {
 export const useGlobleAction = (): Function => {
   const dispatch = useDispatch();
 
-  const setIsLogin = (payload: boolean) => {
+  // Memoize all setter functions to prevent re-renders
+  const setIsLogin = useCallback((payload: boolean) => {
     dispatch(setIsLoggedIn(payload));
-  };
+  }, [dispatch]);
 
-  const setDarkMode = (payload: boolean) => {
+  const setDarkMode = useCallback((payload: boolean) => {
     dispatch(setIsDarkMode(payload));
-  };
-  const setMultiDivision = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setMultiDivision = useCallback((payload: boolean) => {
     dispatch(setIsMultiDivision(payload));
-  };
-  const setParentUser = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setParentUser = useCallback((payload: boolean) => {
     dispatch(setIsParentUser(payload));
-  };
-  const setParentEnabled = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setParentEnabled = useCallback((payload: boolean) => {
     dispatch(setIsParentEnabled(payload));
-  };
-  const setSyncFlag = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setSyncFlag = useCallback((payload: boolean) => {
     dispatch(setSyncFlagState(payload));
-  };
-  const setAccessControl = (payload: any) => {
+  }, [dispatch]);
+
+  const setAccessControl = useCallback((payload: any) => {
     dispatch(setAccessControlData(payload));
-  };
-  const setMenuOrder = (payload: any) => {
+  }, [dispatch]);
+
+  const setMenuOrder = useCallback((payload: any) => {
     dispatch(setMenuOrderData(payload));
-  };
-  const setLastExecTime = (payload: string) => {
+  }, [dispatch]);
+
+  const setLastExecTime = useCallback((payload: string) => {
     dispatch(setLastExecTimeStamp(payload));
-  };
-  const setIsShopCheckIn = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setIsShopCheckIn = useCallback((payload: boolean) => {
     dispatch(setShopCheckedIn(payload));
-  };
-  const setIsMeetingEnded = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setIsMeetingEnded = useCallback((payload: boolean) => {
     dispatch(setMeetingEnded(payload));
-  };
-  const setPersistStartTime = (payload: string) => {
+  }, [dispatch]);
+
+  const setPersistStartTime = useCallback((payload: string) => {
     dispatch(setStartTime(payload));
-  };
-  const setSelectedAreaID = (payload: string) => {
+  }, [dispatch]);
+
+  const setSelectedAreaID = useCallback((payload: string) => {
     dispatch(setSelectedAreaId(payload));
-  };
-  const setIsSyncRefersh = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setIsSyncRefersh = useCallback((payload: boolean) => {
     dispatch(setSyncRefersh(payload));
-  };
+  }, [dispatch]);
 
-  const setBlockedShopDetail = (payload: any) => {
+  const setBlockedShopDetail = useCallback((payload: any) => {
     dispatch(setBlockedShop(payload));
-  };
+  }, [dispatch]);
 
-  const setIsSplashShown = (payload: boolean) => {
+  const setIsSplashShown = useCallback((payload: boolean) => {
     dispatch(setIsSplashShowned(payload));
-  };
+  }, [dispatch]);
 
-  const setGeofenceGlobalSettingsAction = (payload: GeofenceSettings) => {
+  const setGeofenceGlobalSettingsAction = useCallback((payload: GeofenceSettings) => {
     dispatch(setGeofenceSettings(payload));
-  };
+  }, [dispatch]);
 
-  const setLogWritingEnabled = (payload: boolean) => {
+  const setLogWritingEnabled = useCallback((payload: boolean) => {
     dispatch(setIsLogEnabled(payload));
-  };
-  const setAllowedBackdateDispatchDays = (payload: string) => {
+  }, [dispatch]);
+
+  const setAllowedBackdateDispatchDays = useCallback((payload: string) => {
     dispatch(setAllowBackdatedDispatchDays(payload));
-  };
-  const setMeetingEndBlockerVal = (payload: MeetingEndBlockValidation) => {
+  }, [dispatch]);
+
+  const setMeetingEndBlockerVal = useCallback((payload: MeetingEndBlockValidation) => {
     dispatch(setMeetingEndBlocker(payload));
-  };
-  const resetMeetingValidations = () => {
+  }, [dispatch]);
+
+  const resetMeetingValidations = useCallback(() => {
     dispatch(resetMeetingValidation());
-  };
-  const setIsPDCandUnallocatedEnable = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setIsPDCandUnallocatedEnable = useCallback((payload: boolean) => {
     dispatch(setIsPDCandUnallocatedEnabled(payload));
-  };
-  const setIsOnNavWipePODData = (payload: boolean) => {
+  }, [dispatch]);
+
+  const setIsOnNavWipePODData = useCallback((payload: boolean) => {
     dispatch(setIsOnNavWipeDataPOD(payload));
-  };
-  const setAccessControlSettingsAction = (payload: string[]) => {
+  }, [dispatch]);
+
+  const setAccessControlSettingsAction = useCallback((payload: string[]) => {
     dispatch(setAccessControlSettingsReducer(payload));
-  };
+  }, [dispatch]);
 
-  const setIsSyncImmediateAction = (payload: boolean) => {
+  const setIsSyncImmediateAction = useCallback((payload: boolean) => {
     dispatch(setIsSyncImmediateReducer(payload));
-  };
+  }, [dispatch]);
 
-  const setIsNavigationSourceShopsAction = (payload: boolean) => {
+  const setIsNavigationSourceShopsAction = useCallback((payload: boolean) => {
     dispatch(setIsNavigationSourceShopsReducer(payload));
-  };
+  }, [dispatch]);
 
-  const setisWhatsAppOrderPostDocumentAction = (payload: boolean) => {
+  const setisWhatsAppOrderPostDocumentAction = useCallback((payload: boolean) => {
     dispatch(setisWhatsAppOrderPostDocumentReducer(payload));
-  };
+  }, [dispatch]);
 
-  const setAttendanceOptionsAction = (
+  const setAttendanceOptionsAction = useCallback((
     payload: {id: string; name: string}[],
   ) => {
     dispatch(setAttendanceOptions(payload));
-  };
+  }, [dispatch]);
 
-  const setExternalShareAction = (payload: boolean) => {
-    dispatch(setExternalShare(payload)); // <-- this now correctly refers to the Redux action
-  };
+  const setExternalShareAction = useCallback((payload: boolean) => {
+    dispatch(setExternalShare(payload));
+  }, [dispatch]);
 
-  const setOrderConfirmationSignatureAction = (payload: boolean) => {
+  const setOrderConfirmationSignatureAction = useCallback((payload: boolean) => {
     dispatch(setOrderConfirmationSignature(payload));
-  };
+  }, [dispatch]);
 
   const isLoggedin = useAppSelector(state => state.globalReducer.isLoggedin);
   const isDarkMode = useAppSelector(state => state.globalReducer.isDarkMode);

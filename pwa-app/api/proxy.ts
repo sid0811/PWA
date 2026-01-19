@@ -26,10 +26,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const forwardHeaders: Record<string, string> = {};
     const skipHeaders = ['host', 'x-target-url', 'content-length', 'connection', 'keep-alive', 'transfer-encoding'];
 
+    // Map custom headers to actual header names (browser blocks some header names like 'Date')
+    const headerMapping: Record<string, string> = {
+      'x-custom-date': 'Date',
+      'x-custom-parentuserid': 'ParentUserID',
+      'x-custom-commandtype': 'CommandType',
+      'x-custom-userid': 'UserID',
+      'x-custom-collectiontype': 'CollectionType',
+      'x-custom-loginid': 'loginId',
+    };
+
     for (const [key, value] of Object.entries(req.headers)) {
       const lowerKey = key.toLowerCase();
       if (!skipHeaders.includes(lowerKey) && typeof value === 'string') {
-        forwardHeaders[key] = value;
+        // Check if this header needs to be mapped to a different name
+        const mappedKey = headerMapping[lowerKey];
+        if (mappedKey) {
+          forwardHeaders[mappedKey] = value;
+        } else if (!lowerKey.startsWith('x-custom-')) {
+          forwardHeaders[key] = value;
+        }
       }
     }
 

@@ -52,11 +52,16 @@ export const dashGraph = async (data: DashGraphParams): Promise<DashGraph> => {
  * @returns List of child executives
  */
 export const childExecutiveList = async (headers: {loginId: string}): Promise<UserChildren> => {
+  // PWA: Use x-custom- prefixed headers which proxy converts to actual header names
+  const customHeaders = {
+    'x-custom-loginId': headers.loginId,
+  };
+
   const apiClient = await createApiClient();
   const response = await apiClient.post<UserChildren>(
     API_ENDPOINTS.EXECUTIVE_LIST,
     null,
-    {headers},
+    {headers: customHeaders},
   );
   return response.data;
 };
@@ -118,13 +123,15 @@ export const userPerformanceReport = async (
  */
 export const getTeamPerfomanceSummary = async (
   ParentUserID: string,
-  Date: string,
+  ReportDate: string,
   CommandType: number,
 ): Promise<PerformanceItem[]> => {
+  // PWA: Use x-custom- prefixed headers which proxy converts to actual header names
+  // Browser blocks "Date" as a header name (reserved HTTP header)
   const headers = {
-    ParentUserID,
-    Date,
-    CommandType: String(CommandType),
+    'x-custom-ParentUserID': ParentUserID,
+    'x-custom-Date': ReportDate,
+    'x-custom-CommandType': String(CommandType),
   };
 
   const apiClient = await createApiClient();
@@ -142,18 +149,23 @@ export const getTeamPerfomanceSummary = async (
  */
 export const getTeamActivityReport = async ({
   ParentUserID,
-  Date,
+  Date: ReportDate,
   CommandType,
   UserID = '0',
   CollectionType,
 }: TeamActivityReportParams): Promise<TeamActivityReport[]> => {
-  const headers = {
-    ParentUserID,
-    Date,
-    CommandType,
-    UserID,
-    CollectionType,
+  // PWA: Use x-custom- prefixed headers which proxy converts to actual header names
+  // Browser blocks "Date" as a header name (reserved HTTP header)
+  const headers: Record<string, string> = {
+    'x-custom-ParentUserID': ParentUserID || '',
+    'x-custom-Date': ReportDate,
+    'x-custom-CommandType': CommandType,
+    'x-custom-UserID': UserID,
   };
+
+  if (CollectionType) {
+    headers['x-custom-CollectionType'] = CollectionType;
+  }
 
   const apiClient = await createApiClient();
   const response = await apiClient.get<TeamActivityReport[]>(

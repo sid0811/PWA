@@ -30,3 +30,9 @@ export { default as Logo } from './Logo/Logo';
 
 // Buttons
 export { default as ToggleNavBar } from './Buttons/ToggleNavBar';
+
+// ReportHeader
+export { default as ReportHeader } from './ReportHeader/ReportHeader';
+
+// Sidemenu
+export { default as Sidemenu } from './Sidemenu/Sidemenu';

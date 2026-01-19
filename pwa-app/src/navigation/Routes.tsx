@@ -1,11 +1,19 @@
 import { Routes as RouterRoutes, Route, Navigate } from 'react-router-dom';
 import { useGlobalAction } from '../redux/actionHooks/useGlobalAction';
 
-// Screen imports - placeholder components for now
+// Screen imports
 import SplashScreen from '../screens/Splash/SplashScreen';
 import LoginScreen from '../screens/Login/LoginScreen';
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import NotFoundScreen from '../screens/NotFound/NotFoundScreen';
+
+// Report screens
+import {
+  TargetVsAchievementReport,
+  BrandWiseSalesReport,
+  NegativeShopReport,
+  OutstandingAgeReport,
+} from '../screens/Reports';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -53,7 +61,13 @@ const Routes = () => {
       {/* Activity Module */}
       <Route path="/activity" element={<ProtectedRoute><ComingSoon title="Activity" /></ProtectedRoute>} />
 
-      {/* Reports Module */}
+      {/* Dashboard Report Screens */}
+      <Route path="/reports/target-achievement" element={<ProtectedRoute><TargetVsAchievementReport /></ProtectedRoute>} />
+      <Route path="/reports/brand-wise-sales" element={<ProtectedRoute><BrandWiseSalesReport /></ProtectedRoute>} />
+      <Route path="/reports/negative-shop" element={<ProtectedRoute><NegativeShopReport /></ProtectedRoute>} />
+      <Route path="/reports/outstanding-age" element={<ProtectedRoute><OutstandingAgeReport /></ProtectedRoute>} />
+
+      {/* Reports Module (Sidemenu) */}
       <Route path="/reports" element={<ProtectedRoute><ComingSoon title="Reports" /></ProtectedRoute>} />
 
       {/* Data Collection */}
@@ -65,9 +79,14 @@ const Routes = () => {
       {/* Resources */}
       <Route path="/resources" element={<ProtectedRoute><ComingSoon title="Resources" /></ProtectedRoute>} />
 
+      {/* POD */}
+      <Route path="/pod" element={<ProtectedRoute><ComingSoon title="Proof of Delivery" /></ProtectedRoute>} />
+
       {/* Settings & Info */}
+      <Route path="/settings" element={<ProtectedRoute><ComingSoon title="Settings" /></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><ComingSoon title="About Us" /></ProtectedRoute>} />
       <Route path="/privacy" element={<ProtectedRoute><ComingSoon title="Privacy Policy" /></ProtectedRoute>} />
+      <Route path="/security" element={<ProtectedRoute><ComingSoon title="Security Notice" /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<NotFoundScreen />} />

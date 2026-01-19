@@ -1,5 +1,4 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import {useNavigate} from 'react-router-dom';
 import moment from 'moment';
 
 // Components
@@ -8,6 +7,7 @@ import ToggleNavBar from '../../components/Buttons/ToggleNavBar';
 import TopCard from './Component/TopCard';
 import TeamPerformanceReport from './ManagerDashboard/TeamPerformanceReport';
 import ReportCard from './UserPerformance/ReportCard';
+import Sidemenu from '../../components/Sidemenu/Sidemenu';
 
 // Hooks & Redux
 import {useGlobleAction} from '../../redux/actionHooks/useGlobalAction';
@@ -33,11 +33,7 @@ import {Colors} from '../../theme/colors';
 import {writeErrorLog, getCurrentDate} from '../../utility/utils';
 import {DEFAULT_TAB_NAMES} from '../../constants/screenConstants';
 
-// Sidebar menu items
-import {FiHome, FiShoppingBag, FiFileText, FiUsers, FiBarChart2, FiLogOut, FiSettings, FiRefreshCw} from 'react-icons/fi';
-
 function DashboardScreen() {
-  const navigate = useNavigate();
   const {isNetConnected} = useNetInfo();
 
   // Redux hooks
@@ -45,11 +41,10 @@ function DashboardScreen() {
     syncFlag,
     isMultiDivision,
     lastExecutionTime: _lastExecutionTime,
-    setIsLogin,
     setSyncFlag,
   } = useGlobleAction();
 
-  const {userId, userName} = useLoginAction();
+  const {userId} = useLoginAction();
 
   const {
     SelectedDivison,
@@ -218,12 +213,6 @@ function DashboardScreen() {
     setSelectedDivision?.(selectedValue);
   };
 
-  const handleLogout = () => {
-    setIsLogin?.(false);
-    localStorage.removeItem('isLoggedIn');
-    navigate('/login', {replace: true});
-  };
-
   // Navigation items for ToggleNavBar
   const navigationItems = [
     {
@@ -240,115 +229,12 @@ function DashboardScreen() {
     },
   ];
 
-  // Sidebar menu items
-  const menuItems = [
-    {icon: FiHome, label: 'Dashboard', path: '/dashboard'},
-    {icon: FiShoppingBag, label: 'Shops', path: '/shops'},
-    {icon: FiFileText, label: 'Orders', path: '/orders'},
-    {icon: FiUsers, label: 'Collections', path: '/collections'},
-    {icon: FiBarChart2, label: 'Reports', path: '/reports'},
-    {icon: FiSettings, label: 'Settings', path: '/settings'},
-  ];
-
-  const navigateTo = (path: string) => {
-    setIsSidebarOpen(false);
-    navigate(path);
-  };
-
   // Styles
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
     backgroundColor: '#F5F5F5',
-  };
-
-  const sidebarOverlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 998,
-  };
-
-  const sidebarStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: isSidebarOpen ? 0 : '-280px',
-    width: 280,
-    height: '100vh',
-    backgroundColor: Colors.mainBackground,
-    zIndex: 999,
-    transition: 'left 0.3s ease',
-    display: 'flex',
-    flexDirection: 'column',
-  };
-
-  const sidebarHeaderStyle: React.CSSProperties = {
-    padding: 20,
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
-  };
-
-  const sidebarLogoStyle: React.CSSProperties = {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 10,
-  };
-
-  const sidebarUserNameStyle: React.CSSProperties = {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  };
-
-  const sidebarUserRoleStyle: React.CSSProperties = {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 14,
-  };
-
-  const sidebarNavStyle: React.CSSProperties = {
-    flex: 1,
-    padding: '10px 0',
-  };
-
-  const sidebarNavItemStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: '15px 20px',
-    color: 'white',
-    background: 'none',
-    border: 'none',
-    width: '100%',
-    textAlign: 'left',
-    cursor: 'pointer',
-    fontSize: 16,
-  };
-
-  const sidebarNavIconStyle: React.CSSProperties = {
-    marginRight: 15,
-  };
-
-  const sidebarFooterStyle: React.CSSProperties = {
-    padding: 20,
-    borderTop: '1px solid rgba(255,255,255,0.1)',
-  };
-
-  const sidebarLogoutStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    color: 'white',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 16,
-    padding: 0,
-    marginBottom: 15,
   };
 
   const distContainerStyle: React.CSSProperties = {
@@ -369,56 +255,16 @@ function DashboardScreen() {
     <div style={containerStyle}>
       <Loader visible={isLoading} />
 
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          style={sidebarOverlayStyle}
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside style={sidebarStyle}>
-        <div style={sidebarHeaderStyle}>
-          <img
-            src="/icons/icon-72x72.png"
-            alt="Logo"
-            style={sidebarLogoStyle}
-          />
-          <p style={sidebarUserNameStyle}>{userName || 'User'}</p>
-          <p style={sidebarUserRoleStyle}>Sales Executive</p>
-        </div>
-
-        <nav style={sidebarNavStyle}>
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              style={sidebarNavItemStyle}
-              onClick={() => navigateTo(item.path)}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <item.icon size={20} style={sidebarNavIconStyle} />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div style={sidebarFooterStyle}>
-          <button style={sidebarLogoutStyle} onClick={handleSync}>
-            <FiRefreshCw size={20} style={sidebarNavIconStyle} />
-            <span>Sync Now</span>
-          </button>
-          <button style={{...sidebarLogoutStyle, marginBottom: 0}} onClick={handleLogout}>
-            <FiLogOut size={20} style={sidebarNavIconStyle} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      {/* Sidemenu */}
+      <Sidemenu
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onSync={handleSync}
+        onRefreshData={() => {
+          // TODO: Implement refresh data functionality
+          alert('Refresh data functionality will be implemented soon');
+        }}
+      />
 
       {/* Main Content */}
       <TopCard

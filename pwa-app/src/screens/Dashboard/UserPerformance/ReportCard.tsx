@@ -1,11 +1,12 @@
 import React from 'react';
+import {useNavigate} from 'react-router-dom';
 import {
-  FiTrendingUp,
   FiTarget,
   FiBarChart2,
-  FiMinusCircle,
+  FiTag,
   FiAlertCircle,
-  FiClock,
+  FiPackage,
+  FiMapPin,
   FiDollarSign,
 } from 'react-icons/fi';
 
@@ -14,72 +15,86 @@ import {useNetInfo} from '../../../hooks/useNetInfo';
 import {Colors} from '../../../theme/colors';
 import {isAccessControlProvided} from '../../../utility/utils';
 import {CustomSafeView} from '../../../components';
+import {AccessControlKeyConstants} from '../../../constants/screenConstants';
 
 // Web equivalent of responsive screen utilities
 const hp = (percentage: number) => `${percentage}vh`;
 
-// Report categories matching RN app
+// Report categories matching RN app with navigation routes
 const ReportCategories = [
   {
-    name: 'Target Vs Achievement',
-    subtitle: 'View target vs achievement',
+    name: 'Target vs Achievement',
+    subtitle: 'Achievement against set target',
     icon: FiTarget,
-    iconColor: '#E74C3C',
-    accessKeyValue: 'DASHBOARD_TGT_VS_ACHI_REPORT',
-  },
-  {
-    name: 'Target Vs Achievement Without Date',
-    subtitle: 'View target vs achievement without date filter',
-    icon: FiTrendingUp,
     iconColor: '#3498DB',
-    accessKeyValue: 'DASHBOARD_TGT_VS_ACHI_WODATE_REPORT',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_TVA,
+    route: '/reports/target-achievement?type=1',
+    commandType: '1',
   },
   {
-    name: 'Brand Wise Sales',
-    subtitle: 'View brand wise sales data',
+    name: 'WOD Performance',
+    subtitle: 'Brand wise sale with bill cut and width of distribution',
     icon: FiBarChart2,
     iconColor: '#2ECC71',
-    accessKeyValue: 'DASHBOARD_BWS_REPORT',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_WOD,
+    route: '/reports/target-achievement?type=2',
+    commandType: '2',
   },
   {
-    name: 'Negative Shop',
-    subtitle: 'View shops with negative performance',
-    icon: FiMinusCircle,
-    iconColor: '#9B59B6',
-    accessKeyValue: 'DASHBOARD_NEGATIVE_SHOP_REPORT',
+    name: 'Brand-Wise Sales',
+    subtitle: 'Width of Distribution',
+    icon: FiTag,
+    iconColor: '#E74C3C',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_BWS,
+    route: '/reports/brand-wise-sales',
+    commandType: '6',
   },
   {
-    name: 'Zero Billing Shop',
-    subtitle: 'View shops with zero billing',
+    name: 'Un-Billed Outlets',
+    subtitle: 'Outlets Not Billed for last 3 months',
     icon: FiAlertCircle,
     iconColor: '#E67E22',
-    accessKeyValue: 'DASHBOARD_ZERO_BILLING_SHOP_REPORT',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_UBO,
+    route: '/reports/negative-shop?type=3',
+    commandType: '3',
   },
   {
-    name: 'Non Billing Shop',
-    subtitle: 'View non billing shops',
-    icon: FiClock,
+    name: 'Un-Billed Products',
+    subtitle: 'Products Not Billed for last 3 months',
+    icon: FiPackage,
+    iconColor: '#9B59B6',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_UBP,
+    route: '/reports/negative-shop?type=4',
+    commandType: '4',
+  },
+  {
+    name: 'Not Visited Outlets',
+    subtitle: 'Outlets not visited in last 3 months',
+    icon: FiMapPin,
     iconColor: '#1ABC9C',
-    accessKeyValue: 'DASHBOARD_NON_BILLING_SHOP_REPORT',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_NVO,
+    route: '/reports/negative-shop?type=5',
+    commandType: '5',
   },
   {
     name: 'Outstanding Age Report',
     subtitle: 'View outstanding age report',
     icon: FiDollarSign,
     iconColor: '#F1C40F',
-    accessKeyValue: 'DASHBOARD_OUTSTANDING_AGE_REPORT',
+    accessKeyValue: AccessControlKeyConstants.DASHBOARD_PERFORMANCE_OAR,
+    route: '/reports/outstanding-age',
+    commandType: '7',
   },
 ];
 
 const ReportCard = () => {
+  const navigate = useNavigate();
   const {isNetConnected} = useNetInfo();
   const {getAccessControlSettings} = useGlobleAction();
 
-  const toggleCategory = (category: string) => {
+  const handleCategoryClick = (category: (typeof ReportCategories)[0]) => {
     if (isNetConnected === true || isNetConnected === null) {
-      console.log('Navigate to report:', category);
-      // PWA: Will implement navigation to specific report screens
-      alert(`Report: ${category}\nThis feature will be implemented soon.`);
+      navigate(category.route);
     } else {
       alert('No internet connection. Please connect to the internet for live updates.');
     }
@@ -170,7 +185,7 @@ const ReportCard = () => {
               <div
                 key={index}
                 style={itemStyle}
-                onClick={() => toggleCategory(category.name)}
+                onClick={() => handleCategoryClick(category)}
                 onMouseOver={(e) => {
                   e.currentTarget.style.transform = 'scale(1.02)';
                   e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
@@ -178,8 +193,7 @@ const ReportCard = () => {
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
                   e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-                }}
-              >
+                }}>
                 <div style={cardContentStyle}>
                   <div style={rowContainerStyle}>
                     <IconComponent size={50} color={category.iconColor} />

@@ -53,7 +53,6 @@ const Dropdown = (prop: DropDownProps) => {
     multiSelect = false, // New prop for multi-select
   } = prop;
   const {isDarkMode: _isDarkMode} = useGlobleAction();
-  console.log(data);
 
   const [isDropDownOpen, seIsDropDownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

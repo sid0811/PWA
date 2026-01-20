@@ -9,10 +9,16 @@ import NotFoundScreen from '../screens/NotFound/NotFoundScreen';
 
 // Report screens
 import {
+  MyReportList,
   TargetVsAchievementReport,
   BrandWiseSalesReport,
   NegativeShopReport,
   OutstandingAgeReport,
+  DistributorDataStatus,
+  OutletMyActivityPartyList,
+  MyActivityReport,
+  OutletVisitReports,
+  OutletVisitActivity,
 } from '../screens/Reports';
 
 // Protected Route wrapper
@@ -68,7 +74,17 @@ const Routes = () => {
       <Route path="/reports/outstanding-age" element={<ProtectedRoute><OutstandingAgeReport /></ProtectedRoute>} />
 
       {/* Reports Module (Sidemenu) */}
-      <Route path="/reports" element={<ProtectedRoute><ComingSoon title="Reports" /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><MyReportList /></ProtectedRoute>} />
+
+      {/* Additional Report Screens */}
+      <Route path="/reports/distributor-data-status" element={<ProtectedRoute><DistributorDataStatus /></ProtectedRoute>} />
+      <Route path="/reports/outlet-visit" element={<ProtectedRoute><OutletVisitReports /></ProtectedRoute>} />
+      <Route path="/reports/my-activity" element={<ProtectedRoute><OutletMyActivityPartyList /></ProtectedRoute>} />
+      <Route path="/reports/my-activity-detail" element={<ProtectedRoute><MyActivityReport /></ProtectedRoute>} />
+      <Route path="/reports/outlet-visit-activity" element={<ProtectedRoute><OutletVisitActivity /></ProtectedRoute>} />
+      <Route path="/reports/outlet-performance" element={<ProtectedRoute><ComingSoon title="Outlet Performance Report" /></ProtectedRoute>} />
+      <Route path="/reports/visit-based-map" element={<ProtectedRoute><ComingSoon title="Visit Based MapView" /></ProtectedRoute>} />
+      <Route path="/reports/live-location-map" element={<ProtectedRoute><ComingSoon title="Live Location MapView" /></ProtectedRoute>} />
 
       {/* Data Collection */}
       <Route path="/data-collection" element={<ProtectedRoute><ComingSoon title="Data Collection" /></ProtectedRoute>} />

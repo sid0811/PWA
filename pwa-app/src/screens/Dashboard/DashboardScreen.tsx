@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useCallback} from 'react';
 import moment from 'moment';
+import {useTranslation} from 'react-i18next';
 
 // Components
 import {Loader, CustomSafeView, Dropdown} from '../../components';
@@ -23,9 +24,10 @@ import {
   getLastSync,
   getAttendance,
   getAttendance2,
-  getAttendanceEndDay,
-  getTotalOrdersOfOrderMAsternotsync,
   getDataDistributorMaster,
+  getTotalOrdersOfOrderMAsternotsync,
+  getAttendanceEndDay,
+  getAttendanceSettings,
 } from '../../database/SqlDatabase';
 
 // Utils & Constants
@@ -34,6 +36,7 @@ import {writeErrorLog, getCurrentDate} from '../../utility/utils';
 import {DEFAULT_TAB_NAMES} from '../../constants/screenConstants';
 
 function DashboardScreen() {
+  const {t} = useTranslation();
   const {isNetConnected} = useNetInfo();
 
   // Redux hooks
@@ -41,7 +44,10 @@ function DashboardScreen() {
     syncFlag,
     isMultiDivision,
     lastExecutionTime: _lastExecutionTime,
+    setLastExecTime: _setLastExecTime,
     setSyncFlag,
+    setAttendanceOptionsAction,
+    AttendanceOptions: _AttendanceOptions,
   } = useGlobleAction();
 
   const {userId} = useLoginAction();
@@ -59,19 +65,168 @@ function DashboardScreen() {
     setConsentAppVersion,
   } = useDashAction();
 
-  // State
+  // State - matching RN variable names
   const [lastSync, setLastSync] = useState('');
   const [isDataSynced, setIsDataSynced] = useState(true);
   const [multiData, setMultiData] = useState<any[]>([]);
-  const [dayUserEnd, setDayUserEnd] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [dayUserEnd, setdayUserEnd] = useState<any[]>([]);
+  const [isloading, setIsloading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasFetchedDashboard, setHasFetchedDashboard] = useState(false);
 
   /**
-   * Load initial dashboard data
+   * Check sync status - matches RN checkIsSync
    */
-  const loadDashboardData = useCallback(async () => {
+  const checkIsSync = async () => {
+    try {
+      setTimeout(async () => {
+        const isSynced = await getTotalOrdersOfOrderMAsternotsync();
+        setIsDataSynced(isSynced[0]?.TotalCount === 0);
+      }, 300);
+    } catch (error) {
+      writeErrorLog('checkIsSync', error);
+    }
+  };
+
+  /**
+   * Get user day end data - matches RN getUserDayEndData
+   */
+  const getUserDayEndData = async (): Promise<void> => {
+    try {
+      const date: string = await getCurrentDate();
+      const newData: any = await getAttendanceEndDay(date);
+
+      setdayUserEnd((prevData: any) => {
+        if (JSON.stringify(prevData) !== JSON.stringify(newData)) {
+          return newData;
+        }
+        return prevData;
+      });
+    } catch (err) {
+      writeErrorLog('getAttendanceEndDay', err);
+    }
+  };
+
+  /**
+   * Check if attendance is done - matches RN checkIsAttendanceDone
+   */
+  const checkIsAttendanceDone = async () => {
+    try {
+      const datee1 = await getCurrentDate();
+      setTimeout(async () => {
+        await getAttendance(datee1).then(data => {
+          if (data.length <= 0) {
+            setIsAttDone?.(false);
+          } else {
+            setIsAttDone?.(true);
+            getAttendance2(datee1).then(data1 => {
+              if (data1.length <= 0) {
+                setIsAttendOut?.(true);
+              } else {
+                setIsAttendOut?.(false);
+              }
+            });
+          }
+        });
+      }, 300);
+    } catch (error) {
+      writeErrorLog('checkIsAttendanceDone', error);
+    }
+  };
+
+  /**
+   * Get attendance options from settings - matches RN getAttendanceOptions
+   */
+  const getAttendanceOptions = async () => {
+    await getAttendanceSettings()
+      .then((data: any) => {
+        if (data && data.length > 0) {
+          const rawString = data[0].Value;
+          let fixedString = rawString
+            .replace(/(\w+):/g, '"$1":')
+            .replace(/'/g, '"')
+            .replace(/,\s*]/g, ']');
+          try {
+            const stringArray = JSON.parse(fixedString);
+            setAttendanceOptionsAction?.(stringArray);
+            console.log('Formatted attendance options:', stringArray);
+          } catch (parseError) {
+            console.error('JSON parse error after fixing:', parseError);
+            console.log('String being parsed:', fixedString);
+          }
+        }
+      })
+      .catch((error: any) => {
+        console.error('Error fetching sync data:', error);
+      });
+  };
+
+  /**
+   * Set access control data - matches RN setAccessControlData
+   */
+  const setAccessControlData = () => {
+    checkIsSync();
+    getAttendanceOptions();
+    // getApiCallForImage(); // TODO: Implement when needed
+  };
+
+  /**
+   * Get graph data from API - matches RN getGraphData
+   */
+  const getGraphData = async () => {
+    if (!userId) {
+      console.log('No userId - skipping dashboard graph fetch');
+      return;
+    }
+
+    if (!isNetConnected && isNetConnected !== null) {
+      console.log('Offline - skipping dashboard graph fetch');
+      return;
+    }
+
+    if (hasFetchedDashboard) {
+      console.log('Dashboard data already fetched - skipping');
+      return;
+    }
+
+    try {
+      setIsloading(true);
+      setHasFetchedDashboard(true);
+      console.log('Fetching dashboard data for userId:', userId);
+
+      const graphData = await dashGraph({
+        UserId: userId,
+        UOM: '',
+      });
+
+      console.log('Dashboard data received:', graphData ? 'success' : 'empty');
+
+      if (graphData) {
+        if (graphData.SalesTrend) {
+          setSalesTrend?.(graphData.SalesTrend);
+        }
+        if (graphData.UserDetails && graphData.UserDetails.length > 0) {
+          setUserDetails?.(graphData.UserDetails[0]);
+        }
+        if (graphData.ConsentAPIVersion) {
+          setConsentApiVersion?.(graphData.ConsentAPIVersion);
+        }
+        if (graphData.ConsentAppVersion) {
+          setConsentAppVersion?.(graphData.ConsentAppVersion);
+        }
+      }
+    } catch (error) {
+      writeErrorLog('getGraphData', error);
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setIsloading(false);
+    }
+  };
+
+  /**
+   * Load initial data (last sync, multi-division) - matches RN useFocusEffect logic
+   */
+  const loadInitialData = useCallback(async () => {
     try {
       // Get last sync time
       const lastSyncData = await getLastSync();
@@ -86,99 +241,39 @@ function DashboardScreen() {
         }
       }
 
-      // Check attendance status
-      const currentDate = await getCurrentDate();
-      const attendanceData = await getAttendance(currentDate);
-      const attendanceOutData = await getAttendance2(currentDate);
-      const dayEndData = await getAttendanceEndDay(currentDate);
-
-      setIsAttDone?.(attendanceData.length > 0);
-      setIsAttendOut?.(attendanceOutData.length > 0);
-      setDayUserEnd(dayEndData);
-
-      // Check sync status
-      const notSyncedData = await getTotalOrdersOfOrderMAsternotsync();
-      const notSyncedCount = notSyncedData[0]?.TotalCount || 0;
-      setIsDataSynced(notSyncedCount === 0);
-
       // Get multi-division data
       if (isMultiDivision) {
         const distributorData = await getDataDistributorMaster();
         setMultiData(distributorData);
       }
     } catch (error) {
-      writeErrorLog('loadDashboardData', error);
-      console.error('Error loading dashboard data:', error);
+      writeErrorLog('loadInitialData', error);
+      console.error('Error loading initial data:', error);
     }
-  }, [isMultiDivision, setIsAttDone, setIsAttendOut]);
+  }, [isMultiDivision]);
 
-  /**
-   * Fetch dashboard graph data from API
-   */
-  const fetchDashboardGraphData = useCallback(async (force = false) => {
-    // Prevent multiple fetches
-    if (hasFetchedDashboard && !force) {
-      console.log('Dashboard data already fetched - skipping');
-      return;
-    }
-
-    if (!isNetConnected && isNetConnected !== null) {
-      console.log('Offline - skipping dashboard graph fetch');
-      return;
-    }
-
-    // Skip if no userId
-    if (!userId) {
-      console.log('No userId - skipping dashboard graph fetch');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setHasFetchedDashboard(true);
-      console.log('Fetching dashboard data for userId:', userId);
-      const data = await dashGraph({
-        UserId: userId,
-        UOM: '', // PWA: UOM will be fetched from settings when implemented
-      });
-      console.log('Dashboard data received:', data ? 'success' : 'empty');
-
-      if (data) {
-        // Update redux state with fetched data
-        if (data.SalesTrend) {
-          setSalesTrend?.(data.SalesTrend);
-        }
-        if (data.UserDetails && data.UserDetails.length > 0) {
-          setUserDetails?.(data.UserDetails[0]);
-        }
-        if (data.ConsentAPIVersion) {
-          setConsentApiVersion?.(data.ConsentAPIVersion);
-        }
-        if (data.ConsentAppVersion) {
-          setConsentAppVersion?.(data.ConsentAppVersion);
-        }
-      }
-    } catch (error) {
-      writeErrorLog('fetchDashboardGraphData', error);
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, isNetConnected, hasFetchedDashboard, setSalesTrend, setUserDetails, setConsentApiVersion, setConsentAppVersion]);
-
-  // Initial data load - only once when component mounts
+  // Effect for setAccessControlData - matches RN useEffect
   useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+    setAccessControlData();
+  }, [syncFlag]);
 
-  // Fetch dashboard data when userId is available
+  // Effect for attendance and day end checks - matches RN useFocusEffect
   useEffect(() => {
-    if (userId && !hasFetchedDashboard) {
-      fetchDashboardGraphData();
-    }
-  }, [userId, hasFetchedDashboard, fetchDashboardGraphData]);
+    checkIsAttendanceDone();
+    getUserDayEndData();
+  }, [syncFlag, lastSync]);
 
-  // Refresh data when sync flag changes (user initiated sync)
+  // Effect for graph data - matches RN useEffect
+  useEffect(() => {
+    getGraphData();
+  }, [userId, syncFlag]);
+
+  // Initial data load
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // Reset fetch flag when sync changes
   useEffect(() => {
     if (syncFlag && hasFetchedDashboard) {
       setHasFetchedDashboard(false);
@@ -186,45 +281,47 @@ function DashboardScreen() {
   }, [syncFlag]);
 
   /**
+   * Handle dropdown item change - matches RN onDDItemChange
+   */
+  const onDDItemChange = (selectedValue: any) => {
+    setSelectedDivision?.(selectedValue);
+  };
+
+  /**
    * Handle manual sync
    */
   const handleSync = useCallback(async () => {
     if (!isNetConnected && isNetConnected !== null) {
-      alert('No internet connection. Please connect to the internet to sync.');
+      alert(t('Alerts.NoInternetConnection') || 'No internet connection. Please connect to the internet to sync.');
       return;
     }
 
-    setIsLoading(true);
+    setIsloading(true);
     try {
-      // Trigger sync flag update
       setSyncFlag?.(!syncFlag);
       localStorage.setItem('lastSync', moment().format('DD-MMM-YYYY HH:mm'));
       setLastSync(moment().format('DD-MMM-YYYY HH:mm'));
-      alert('Sync completed successfully');
+      alert(t('Common.SyncComplete') || 'Sync completed successfully');
     } catch (error) {
       writeErrorLog('handleSync', error);
-      alert('Sync failed. Please try again.');
+      alert(t('Alerts.SyncFailed') || 'Sync failed. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsloading(false);
     }
-  }, [isNetConnected, syncFlag, setSyncFlag]);
-
-  const onDDItemChange = (selectedValue: any) => {
-    setSelectedDivision?.(selectedValue);
-  };
+  }, [isNetConnected, syncFlag, setSyncFlag, t]);
 
   // Navigation items for ToggleNavBar
   const navigationItems = [
     {
       id: 'home',
       icon: 'layout',
-      label: 'Home',
+      label: t('Dashboard.Home') || 'Home',
       component: <TeamPerformanceReport />,
     },
     {
       id: 'my_perf_rep',
       icon: 'bar-chart-2',
-      label: 'Performance Report',
+      label: t('Dashboard.PerformanceReport') || 'Performance Report',
       component: <ReportCard />,
     },
   ];
@@ -253,7 +350,7 @@ function DashboardScreen() {
 
   return (
     <div style={containerStyle}>
-      <Loader visible={isLoading} />
+      <Loader visible={isloading} />
 
       {/* Sidemenu */}
       <Sidemenu
@@ -262,7 +359,7 @@ function DashboardScreen() {
         onSync={handleSync}
         onRefreshData={() => {
           // TODO: Implement refresh data functionality
-          alert('Refresh data functionality will be implemented soon');
+          alert(t('Common.RefreshDataComingSoon') || 'Refresh data functionality will be implemented soon');
         }}
       />
 
@@ -283,8 +380,8 @@ function DashboardScreen() {
           <div style={distContainerStyle}>
             <Dropdown
               data={multiData}
-              label="Distributor"
-              placeHolder="Select Distributor"
+              label={t('Dashboard.Distributor') || 'Distributor'}
+              placeHolder={t('Dashboard.SelectDistributor') || 'Select Distributor'}
               onPressItem={(val: any) => onDDItemChange(val)}
               selectedValue={SelectedDivison?.Distributor}
             />

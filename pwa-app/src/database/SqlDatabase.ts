@@ -1047,12 +1047,12 @@ export async function getLastSync(): Promise<{Value: string} | null> {
 }
 
 /**
- * Get attendance for a specific date
+ * Get attendance for a specific date (collection_type = 8 for IN)
  */
-export async function getAttendance(date: string): Promise<any[]> {
+export async function getAttendance(date: string): Promise<{id: string}[]> {
   try {
-    const result = await executeSelect(
-      `SELECT * FROM Attendance WHERE AttendanceDate = ? AND AttendanceType = 'IN'`,
+    const result = await executeSelect<{id: string}>(
+      `SELECT id FROM OrderMaster WHERE collection_type = 8 AND from_date = ?`,
       [date]
     );
     return result;
@@ -1063,12 +1063,12 @@ export async function getAttendance(date: string): Promise<any[]> {
 }
 
 /**
- * Get attendance out for a specific date
+ * Get attendance out for a specific date (collection_type = 9 for OUT)
  */
-export async function getAttendance2(date: string): Promise<any[]> {
+export async function getAttendance2(date: string): Promise<{id: string}[]> {
   try {
-    const result = await executeSelect(
-      `SELECT * FROM Attendance WHERE AttendanceDate = ? AND AttendanceType = 'OUT'`,
+    const result = await executeSelect<{id: string}>(
+      `SELECT id FROM OrderMaster WHERE collection_type = 9 AND from_date = ?`,
       [date]
     );
     return result;
@@ -1079,12 +1079,12 @@ export async function getAttendance2(date: string): Promise<any[]> {
 }
 
 /**
- * Get attendance end day data
+ * Get attendance end day data (collection_type = 9 for OUT)
  */
-export async function getAttendanceEndDay(date: string): Promise<any[]> {
+export async function getAttendanceEndDay(date: string): Promise<{id: string}[]> {
   try {
-    const result = await executeSelect(
-      `SELECT * FROM Attendance WHERE AttendanceDate = ? AND IsDayEnd = 1`,
+    const result = await executeSelect<{id: string}>(
+      `SELECT id FROM OrderMaster WHERE collection_type = 9 AND from_date = ?`,
       [date]
     );
     return result;
@@ -1266,6 +1266,469 @@ export async function insertuses_log(
   }
 }
 
+/**
+ * Get Report Classification for Brand Wise Sales (Report1)
+ */
+export async function getClassificationfromDBReport1(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT * FROM Report WHERE MenuKey = ?',
+      ['Report1']
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getClassificationfromDBReport1 error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Report Classification for Target vs Achievement (Report2)
+ */
+export async function getClassificationfromDBReport2(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT * FROM Report WHERE MenuKey = ?',
+      ['Report2']
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getClassificationfromDBReport2 error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Report Classification for Report3
+ */
+export async function getClassificationfromDBReport3(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT * FROM Report WHERE MenuKey = ?',
+      ['Report3']
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getClassificationfromDBReport3 error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Control ID from ReportControlMaster
+ */
+export async function getControlId(key: string): Promise<any> {
+  try {
+    const results = await executeSelect(
+      'SELECT ControlId FROM ReportControlMaster WHERE ReferenceColumn = ?',
+      [key]
+    );
+    return results?.[0] || null;
+  } catch (error) {
+    console.error('PWA: getControlId error', error);
+    return null;
+  }
+}
+
+/**
+ * Get all brand list based on ControlId
+ */
+export async function getAllBrandList(ControlId: string, uid: string): Promise<any[]> {
+  try {
+    const query = `SELECT DISTINCT ${ControlId} as BRAND, ${ControlId}ID as BRANDID, IsSelectedBrand, IsSelectedBrandProduct FROM PItem WHERE userid = ? ORDER BY ${ControlId}`;
+    const results = await executeSelect(query, [uid]);
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getAllBrandList error', error);
+    return [];
+  }
+}
+
+/**
+ * Get UOM List
+ */
+export async function getUOMList(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT id, UOMDescription FROM uommaster',
+      []
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getUOMList error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Outlet/Party list for reports
+ */
+export async function getOutletParty(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT Party, CustomerId FROM Pcustomer',
+      []
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getOutletParty error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Brands for user (Outlet Performance Report)
+ */
+export async function getBrands(uid: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT BRAND, BRANDID FROM PItem WHERE userid = ? ORDER BY BRAND',
+      [uid]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getBrands error', error);
+    return [];
+  }
+}
+
+/**
+ * Get SKU for user (Outlet Performance Report)
+ */
+export async function getSKU(uid: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT Item, ItemId FROM PItem WHERE userid = ? ORDER BY Item',
+      [uid]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getSKU error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Size for user (Outlet Performance Report)
+ */
+export async function getSize(uid: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT ITEMSIZE, ITEMSIZEID, Item FROM PItem WHERE userid = ? ORDER BY Item',
+      [uid]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getSize error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Distributor Data for user
+ */
+export async function getDistributorData(uid: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT DistributorID, Distributor FROM PDistributor WHERE userid = ? ORDER BY Distributor',
+      [uid]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getDistributorData error', error);
+    return [];
+  }
+}
+
+/**
+ * Get all distributors
+ */
+export async function GetAllDistributors(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT DistributorID, Distributor FROM PDistributor ORDER BY Distributor ASC',
+      []
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: GetAllDistributors error', error);
+    return [];
+  }
+}
+
+/**
+ * Get activity data for last 3 days (My Activity Report)
+ */
+export async function getmyactivitydataget(
+  currentdate: string,
+  yesterdaysdate: string,
+  dayafteryesterdays: string
+): Promise<{today: any[]; yesterday: any[]; dayBefore: any[]}> {
+  try {
+    const queryToday = `SELECT DISTINCT OrderMaster.entity_id, OrderMaster.from_date, Pcustomer.Party, Pcustomer.CustomerId
+      FROM OrderMaster
+      LEFT JOIN Pcustomer ON OrderMaster.entity_id = Pcustomer.CustomerId
+      WHERE OrderMaster.from_date = ?`;
+
+    const queryYesterday = `SELECT DISTINCT OrderMaster.entity_id, OrderMaster.from_date, Pcustomer.Party, Pcustomer.CustomerId
+      FROM OrderMaster
+      LEFT JOIN Pcustomer ON OrderMaster.entity_id = Pcustomer.CustomerId
+      WHERE OrderMaster.from_date = ?`;
+
+    const queryDayBefore = `SELECT DISTINCT OrderMaster.entity_id, OrderMaster.from_date, Pcustomer.Party, Pcustomer.CustomerId
+      FROM OrderMaster
+      LEFT JOIN Pcustomer ON OrderMaster.entity_id = Pcustomer.CustomerId
+      WHERE OrderMaster.from_date = ?`;
+
+    const [today, yesterday, dayBefore] = await Promise.all([
+      executeSelect(queryToday, [currentdate]),
+      executeSelect(queryYesterday, [yesterdaysdate]),
+      executeSelect(queryDayBefore, [dayafteryesterdays]),
+    ]);
+
+    return {
+      today: today || [],
+      yesterday: yesterday || [],
+      dayBefore: dayBefore || [],
+    };
+  } catch (error) {
+    console.error('PWA: getmyactivitydataget error', error);
+    return {today: [], yesterday: [], dayBefore: []};
+  }
+}
+
+/**
+ * Get order booked details for outlet (Outlet Visit Activity)
+ */
+export async function checkorderbookeddetails(entity_id: string, uid: string): Promise<any[]> {
+  try {
+    const query = `SELECT DISTINCT Current_date_time, OrderMaster.from_date, ActivityStart, ActivityEnd, collection_type,
+      OrderMaster.id, OrderDetails.item_id, OrderDetails.quantity_one, OrderDetails.quantity_two,
+      OrderDetails.small_Unit, OrderDetails.large_Unit, OrderDetails.Amount, PItem.Item
+      FROM OrderMaster
+      LEFT JOIN OrderDetails ON OrderMaster.id = OrderDetails.order_id
+      LEFT JOIN PItem ON OrderDetails.item_id = PItem.ItemId
+      WHERE OrderMaster.entity_id = ? AND OrderMaster.userid = ?`;
+
+    const results = await executeSelect(query, [entity_id, uid]);
+    return results || [];
+  } catch (error) {
+    console.error('PWA: checkorderbookeddetails error', error);
+    return [];
+  }
+}
+
+/**
+ * Get all orders in OrderMaster for specific dates (My Activity Report)
+ */
+export async function checkallordersinordermaster(
+  entity_id: string,
+  _currentDate: string,
+  _yesterdaydate: string,
+  _dayafteryesterdays: string,
+  date: string,
+  uid: string
+): Promise<any[]> {
+  try {
+    const query = `SELECT Current_date_time, OrderMaster.from_date, ActivityStart, ActivityEnd, collection_type,
+      OrderMaster.id, OrderDetails.item_id, OrderDetails.quantity_one, OrderDetails.quantity_two,
+      OrderDetails.Amount, PItem.Item
+      FROM OrderMaster
+      LEFT JOIN OrderDetails ON OrderMaster.id = OrderDetails.order_id
+      LEFT JOIN PItem ON OrderDetails.item_id = PItem.ItemId
+      WHERE OrderMaster.entity_id = ? AND OrderMaster.from_date = ? AND OrderMaster.userid = ?`;
+
+    const results = await executeSelect(query, [entity_id, date, uid]);
+    return results || [];
+  } catch (error) {
+    console.error('PWA: checkallordersinordermaster error', error);
+    return [];
+  }
+}
+
+/**
+ * Get customer data from Pcustomer
+ */
+export async function getdatafromcust(entity_id: string, uid: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT * FROM Pcustomer WHERE CustomerId = ? AND userid = ?',
+      [entity_id, uid]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getdatafromcust error', error);
+    return [];
+  }
+}
+
+/**
+ * Get distributor data from PDistributor
+ */
+export async function getdatafromdist(entity_id: string, uid: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT Distributor as Party, AREA as AREA FROM PDistributor WHERE DistributorID = ? AND userid = ?',
+      [entity_id, uid]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getdatafromdist error', error);
+    return [];
+  }
+}
+
+/**
+ * Get data for activity (distinct entity_ids from OrderMaster)
+ */
+export async function getDataForActivity(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT DISTINCT entity_id FROM OrderMaster',
+      []
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getDataForActivity error', error);
+    return [];
+  }
+}
+
+/**
+ * Get Item IDs from Brand IDs
+ */
+export async function getItemIDFromBrandId(brandIDs: string[]): Promise<any[]> {
+  try {
+    if (!brandIDs.length) return [];
+    const placeholders = brandIDs.map(() => '?').join(',');
+    const query = `SELECT DISTINCT ItemId FROM PItem WHERE BRANDID IN (${placeholders})`;
+    const results = await executeSelect(query, brandIDs);
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getItemIDFromBrandId error', error);
+    return [];
+  }
+}
+
+/**
+ * Get location of outlets for map view
+ */
+export async function getLocationOfOutlets(route_id: string): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT * FROM Pcustomer WHERE route_id = ?',
+      [route_id]
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getLocationOfOutlets error', error);
+    return [];
+  }
+}
+
+/**
+ * Get online parent area data for location/area selection
+ */
+export async function getOnlineParentAreaData(): Promise<any[]> {
+  try {
+    const results = await executeSelect(
+      'SELECT AreaId, Area FROM OnlineParentArea ORDER BY Area ASC',
+      []
+    );
+    return results || [];
+  } catch (error) {
+    console.error('PWA: getOnlineParentAreaData error', error);
+    return [];
+  }
+}
+
+/**
+ * Get multi distributor user IDs
+ */
+export async function getMultiDistributorUserId(): Promise<{Userid: string}[]> {
+  try {
+    const result = await executeSelect<{Userid: string}>(
+      'SELECT Userid FROM MultiEntityUser',
+      []
+    );
+    return result;
+  } catch (error) {
+    console.error('PWA: getMultiDistributorUserId error', error);
+    return [];
+  }
+}
+
+/**
+ * Insert record in OrderMaster for shop check-in (attendance)
+ */
+export async function insertRecordInOrderMasterForShopCheckIn(
+  id: string,
+  Current_date_time: string,
+  entity_type: string,
+  entity_id: string | number,
+  latitude: string | number,
+  longitude: string | number,
+  total_amount: string | number,
+  from_date: string,
+  to_date: string,
+  collection_type: string | number,
+  user_id: string | number,
+  selected_flag: string,
+  sync_flag: string,
+  remark: string,
+  check_date: string,
+  DefaultDistributorId: string | number,
+  ExpectedDeliveryDate: string,
+  Activitystatus: string,
+  activityStart: string,
+  activityend: string,
+  uid: string | number,
+): Promise<any> {
+  console.log(
+    'check in OMast colll type --->',
+    collection_type,
+    'app_o_id--->',
+    id,
+    uid,
+    user_id,
+    entity_id,
+  );
+  try {
+    const result = await executeSql(
+      `INSERT INTO OrderMaster(id,Current_date_time,entity_type,entity_id,latitude,
+        longitude,total_amount,from_date,to_date,collection_type,user_id,selected_flag,sync_flag,remark,check_date,DefaultDistributorId,ExpectedDeliveryDate,ActivityStatus,ActivityStart,ActivityEnd,userid)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        String(id),
+        String(Current_date_time),
+        String(entity_type),
+        String(entity_id),
+        String(latitude),
+        String(longitude),
+        String(total_amount),
+        String(from_date),
+        String(to_date),
+        String(collection_type),
+        String(user_id),
+        String(selected_flag),
+        String(sync_flag),
+        String(remark),
+        String(check_date),
+        String(DefaultDistributorId),
+        String(ExpectedDeliveryDate),
+        String(Activitystatus),
+        String(activityStart),
+        String(activityend),
+        String(uid),
+      ]
+    );
+    return result;
+  } catch (error) {
+    console.error('PWA: insertRecordInOrderMasterForShopCheckIn error', error);
+    return null;
+  }
+}
+
 export default {
   SqlDB,
   createTables,
@@ -1294,4 +1757,28 @@ export default {
   getDataDistributorMasterFirst,
   insertAttendance,
   insertuses_log,
+  // Report functions
+  getClassificationfromDBReport1,
+  getClassificationfromDBReport2,
+  getClassificationfromDBReport3,
+  getControlId,
+  getAllBrandList,
+  getUOMList,
+  getOutletParty,
+  getBrands,
+  getSKU,
+  getSize,
+  getDistributorData,
+  GetAllDistributors,
+  getmyactivitydataget,
+  checkorderbookeddetails,
+  checkallordersinordermaster,
+  getdatafromcust,
+  getdatafromdist,
+  getDataForActivity,
+  getItemIDFromBrandId,
+  // Attendance functions
+  getMultiDistributorUserId,
+  insertRecordInOrderMasterForShopCheckIn,
+  getOnlineParentAreaData,
 };

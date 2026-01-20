@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {FiMenu, FiMapPin, FiRefreshCw} from 'react-icons/fi';
-import moment from 'moment';
+import {useTranslation} from 'react-i18next';
 
 import {Colors} from '../../../theme/colors';
 import {useLoginAction} from '../../../redux/actionHooks/useLoginAction';
@@ -11,10 +11,11 @@ import Loader from '../../../components/Loader/Loader';
 import {
   attendanceList,
   writeActivityLog,
-  getCurrentDateTime,
-  getCurrentDate,
+  writeErrorLog,
 } from '../../../utility/utils';
-import {insertAttendance, insertuses_log} from '../../../database/SqlDatabase';
+import {getOnlineParentAreaData} from '../../../database/SqlDatabase';
+import {insertAttendance, onEndDAY} from '../Functions/AttendanceFunc';
+import useLocation from '../../../hooks/useLocation';
 
 // Web equivalent of responsive screen utilities
 const wp = (percentage: number) => `${percentage}vw`;
@@ -30,6 +31,7 @@ interface props {
   AttendanceMarked?: boolean;
   AttendanceEnd?: boolean;
   AttendanceDayEnd?: any;
+  defaultDistributorId?: string | number;
 }
 
 function TopCard(props: props) {
@@ -43,180 +45,101 @@ function TopCard(props: props) {
     AttendanceEnd,
     AttendanceDayEnd,
   } = props;
+  const {t} = useTranslation();
+  const {latitude, longitude} = useLocation();
 
   const {userName, userId} = useLoginAction();
+
   const {
     isMultiDivision,
-    isParentUser,
-    AttendanceOptions,
+    setParentEnabled,
     setSyncFlag,
     syncFlag,
+    isParentUser,
+    setSelectedAreaID,
+    isLogWritingEnabled,
+    AttendanceOptions,
   } = useGlobleAction();
-  const {
-    UserDetails,
-    setIsAttDone,
-    setIsAttendOut,
-  } = useDashAction();
+  const {UserDetails} = useDashAction();
+  const [updateAttendanceUi, setUpdateAttendanceUi] = useState(0);
 
+  const [locationArea, setLocationArea] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isloading, setIsloading] = useState(false);
   const [isLocationModal, setIsLocationModal] = useState(false);
-  const [locationArea, _setLocationArea] = useState([]);
 
   const onLocationIconPress = async () => {
     setIsLocationModal(true);
-    if (isParentUser) {
-      setModalVisible(true);
-      // PWA: Fetch location area data from API
-      // getOnlineParentAreaData().then(setLocationArea);
-    }
+    isParentUser && setModalVisible(true);
+
+    getOnlineParentAreaData()
+      .then((data: any) => {
+        setLocationArea(data);
+      })
+      .catch(err => {
+        writeErrorLog('getOnlineParentAreaData', err);
+      });
   };
 
   const onAttendanceIconPress = async () => {
-    writeActivityLog(`Attendance Pressed`);
+    isLogWritingEnabled && writeActivityLog(`Attendance Marked`);
     if (!AttendanceMarked) {
       setIsLocationModal(false);
       setModalVisible(true);
     } else if (AttendanceEnd && AttendanceMarked) {
       const confirmEnd = window.confirm(
-        'End Your Day?\n\nAre you sure you want to end your day?'
+        `${t('Alerts.AlertEndYourDayTitle')}\n\n${t('Alerts.AlertEndYourDayMsg')}`
       );
       if (confirmEnd) {
-        await doEndDay();
+        await onEndDAY(userId, latitude, longitude);
+        isLogWritingEnabled && writeActivityLog(`Attendance Out`);
+
+        // Sync attendance
+        setIsloading(true);
+        try {
+          var increment = updateAttendanceUi + 1;
+          console.log('increment---', increment);
+          setUpdateAttendanceUi(increment);
+          setSyncFlag?.(!syncFlag);
+        } finally {
+          setIsloading(false);
+        }
       }
     } else {
-      alert('You have already ended your work day.');
+      alert(t('Alerts.AlertYouAlreadtEndedYourWorkDay'));
     }
   };
 
-  /**
-   * Mark attendance and insert into database
-   */
-  const doInsertAttendance = async (selectedItem: string) => {
-    setIsLoading(true);
+  async function doInsertAttendance(selectedItem: string) {
+    await insertAttendance(selectedItem, userId, latitude, longitude, t);
+    setModalVisible(false);
+
+    // Sync attendance
+    setIsloading(true);
     try {
-      const currentDate = await getCurrentDate();
-      const currentDateTime = await getCurrentDateTime();
-
-      // Get current location if available
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-
-      if (navigator.geolocation) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            });
-          });
-          latitude = position.coords.latitude;
-          longitude = position.coords.longitude;
-        } catch (geoError) {
-          console.log('Geolocation error:', geoError);
-        }
-      }
-
-      // Insert attendance record
-      await insertAttendance(
-        userId,
-        'IN',
-        currentDate,
-        moment().format('HH:mm:ss'),
-        latitude,
-        longitude,
-        selectedItem, // Remark (attendance type like "Local Market")
-        0 // Not day end
-      );
-
-      // Log the activity
-      await insertuses_log(userId, `Attendance Marked: ${selectedItem}`, currentDateTime);
-
-      // Update redux state
-      setIsAttDone?.(true);
-
-      // Trigger sync
+      var increment = updateAttendanceUi + 1;
+      console.log('increment11---', increment);
+      setUpdateAttendanceUi(increment);
       setSyncFlag?.(!syncFlag);
-
-      writeActivityLog(`Attendance Marked: ${selectedItem}`);
-      alert(`Attendance marked successfully!\nType: ${selectedItem}`);
-    } catch (error) {
-      console.error('Error marking attendance:', error);
-      writeActivityLog(`Attendance Error: ${error}`);
-      alert('Failed to mark attendance. Please try again.');
     } finally {
-      setModalVisible(false);
-      setIsLoading(false);
+      setIsloading(false);
     }
-  };
-
-  /**
-   * End day attendance
-   */
-  const doEndDay = async () => {
-    setIsLoading(true);
-    try {
-      const currentDate = await getCurrentDate();
-      const currentDateTime = await getCurrentDateTime();
-
-      // Get current location if available
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-
-      if (navigator.geolocation) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            });
-          });
-          latitude = position.coords.latitude;
-          longitude = position.coords.longitude;
-        } catch (geoError) {
-          console.log('Geolocation error:', geoError);
-        }
-      }
-
-      // Insert attendance out record
-      await insertAttendance(
-        userId,
-        'OUT',
-        currentDate,
-        moment().format('HH:mm:ss'),
-        latitude,
-        longitude,
-        'Day End',
-        1 // Is day end
-      );
-
-      // Log the activity
-      await insertuses_log(userId, 'Attendance Out - Day Ended', currentDateTime);
-
-      // Update redux state
-      setIsAttendOut?.(true);
-
-      // Trigger sync
-      setSyncFlag?.(!syncFlag);
-
-      writeActivityLog('Day Ended');
-      alert('Day ended successfully!');
-    } catch (error) {
-      console.error('Error ending day:', error);
-      writeActivityLog(`Day End Error: ${error}`);
-      alert('Failed to end day. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }
 
   const insertArea = async (selectedItem: any) => {
-    console.log('Area selected:', selectedItem);
+    setParentEnabled?.(false);
     setModalVisible(false);
-    // PWA: Handle area change - will implement with full area functionality
-    alert(`Area selected: ${selectedItem?.Area || selectedItem}`);
+    await setSelectedAreaID?.(selectedItem?.AreaId);
+
+    // Trigger sync and get data
+    setIsloading(true);
+    try {
+      setSyncFlag?.(!syncFlag);
+    } finally {
+      setIsloading(false);
+    }
+    setModalVisible(false);
+    setSyncFlag?.(!syncFlag);
   };
 
   // Styles
@@ -282,7 +205,7 @@ function TopCard(props: props) {
 
   return (
     <>
-      <Loader visible={isLoading} />
+      <Loader visible={isloading} />
       <div style={topContainerStyle}>
         <div style={iconContainerStyle}>
           <button
@@ -297,7 +220,7 @@ function TopCard(props: props) {
             <button
               style={iconButtonStyle}
               onClick={onAttendanceIconPress}
-              title="Mark Attendance"
+              title={t('Dashboard.MarkAttendance')}
             >
               {getAttendanceIcon()}
             </button>
@@ -307,7 +230,6 @@ function TopCard(props: props) {
               style={iconButtonStyle}
               onClick={() => {
                 setSyncFlag?.(!syncFlag);
-                alert('Sync triggered');
               }}
               title="Sync Status"
             >
@@ -330,18 +252,18 @@ function TopCard(props: props) {
 
         <div style={{marginLeft: wp(1.6)}}>
           <span style={greetingStyle}>
-            Hello, {userName || 'User'}
+            {t('Common.Hello')}, {userName || 'User'}
           </span>
 
           <div style={{display: 'flex', flexDirection: 'row', ...subTextStyle}}>
-            <span>Last Sync: </span>
+            <span>{t('Dashboard.LastSync')}, </span>
             <span style={highlightTextStyle}>{lastSync || 'Never'}</span>
           </div>
 
-          {UserDetails?.Attendance_at && (
+          {updateAttendanceUi !== undefined && (
             <div style={{display: 'flex', flexDirection: 'row', ...subTextStyle, marginTop: 5}}>
-              <span>Attendance: </span>
-              <span style={highlightTextStyle}>{UserDetails.Attendance_at}</span>
+              <span>{t('Dashboard.Attendance')}, </span>
+              <span style={highlightTextStyle}>{UserDetails?.Attendance_at}</span>
             </div>
           )}
         </div>
@@ -357,12 +279,24 @@ function TopCard(props: props) {
               : attendanceList
           }
           ddlabel={isLocationModal ? 'Area' : 'name'}
-          onPress={(val: boolean) => setModalVisible(val)}
-          onConfirm={(isLocOpen: boolean, selectedItem: any) => {
-            isLocOpen ? insertArea(selectedItem) : doInsertAttendance(selectedItem);
+          onPress={(val: boolean) => {
+            setModalVisible(val);
           }}
-          modalTitle={isLocationModal ? 'Confirm Location' : 'Mark Attendance'}
-          dropdownTitle={isLocationModal ? 'Choose Area' : 'Start Your Day'}
+          onConfirm={(isLocOpen: boolean, selectedItem: any) => {
+            isLocOpen
+              ? insertArea(selectedItem)
+              : doInsertAttendance(selectedItem);
+          }}
+          modalTitle={
+            isLocationModal
+              ? t('Dashboard.ConfirmLoc')
+              : t('Dashboard.MarkAttendance')
+          }
+          dropdownTitle={
+            isLocationModal
+              ? t('Dashboard.ChooseArea')
+              : t('Dashboard.StartDay')
+          }
         />
       </div>
     </>

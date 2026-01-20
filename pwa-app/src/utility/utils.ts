@@ -51,6 +51,21 @@ export const dataSyncObjectKeys = {
   newPartyTargetId: 'newPartyTargetId',
 };
 
+// Collection types for OrderMaster
+export const enum COLLECTION_TYPE {
+  ORDER = '0',
+  DATA_COLLECTION1 = '1',
+  DATA_COLLECTION2 = '2',
+  IMAGE = '3',
+  VISITED_SHOPS = '4',
+  ASSETS = '5',
+  MEETING = '6',
+  PAYMENT_COLLECTION = '7',
+  ATTENDANCE_IN = '8',
+  ATTENDANCE_OUT = '9',
+  TAKE_SURVEY = '10',
+}
+
 // Global Utilities
 export const getAppOrderId = async (uid: number | string) => {
   let AOID = '';

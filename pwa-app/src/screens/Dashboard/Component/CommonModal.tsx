@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {Colors} from '../../../theme/colors';
 import Dropdown from '../../../components/Dropdown/Dropdown';
 import {useGlobleAction} from '../../../redux/actionHooks/useGlobalAction';
@@ -32,6 +33,7 @@ function CommonModal(props: props) {
     modalData,
   } = props;
 
+  const {t} = useTranslation();
   const {isParentUser} = useGlobleAction();
   const [selectedAtten, setSelectedAtten] = useState<any>('');
   const [selectedArea, setSelectedArea] = useState<any>({});
@@ -181,7 +183,7 @@ function CommonModal(props: props) {
               />
             ) : (
               <span style={noDataTextStyle}>
-                No Data is Available for the Executive!
+                {t('Dashboard.NoDataAvailable')}
               </span>
             )
           ) : (
@@ -210,14 +212,14 @@ function CommonModal(props: props) {
               );
             }}
           >
-            <span style={confirmTextStyle}>Confirm</span>
+            <span style={confirmTextStyle}>{t('Common.Confirm')}</span>
           </button>
 
           <button
             style={cancelTextStyle}
             onClick={() => onPress(false)}
           >
-            Cancel
+            {t('Common.Cancel')}
           </button>
         </div>
       </div>

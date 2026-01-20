@@ -10,6 +10,9 @@ import './styles/index.css';
 // Initialize sql.js database
 import { initDatabase } from './database/SqliteManager';
 
+// Initialize i18n for translations
+import './i18n/i18n';
+
 const initApp = async () => {
   // Initialize database before rendering
   try {

@@ -63,6 +63,8 @@ function DashboardScreen() {
     setUserDetails,
     setConsentApiVersion,
     setConsentAppVersion,
+    cachedDashboardData,
+    setCachedDashboardDataAction,
   } = useDashAction();
 
   // State - matching RN variable names
@@ -172,6 +174,10 @@ function DashboardScreen() {
 
   /**
    * Get graph data from API - matches RN getGraphData
+   * Implements stale-while-revalidate pattern:
+   * - Show cached data immediately (no loader)
+   * - Fetch fresh data in background
+   * - Update when new data arrives
    */
   const getGraphData = async () => {
     if (!userId) {
@@ -180,7 +186,12 @@ function DashboardScreen() {
     }
 
     if (!isNetConnected && isNetConnected !== null) {
-      console.log('Offline - skipping dashboard graph fetch');
+      console.log('Offline - using cached data if available');
+      // Use cached data if offline
+      if (cachedDashboardData) {
+        setSalesTrend?.(cachedDashboardData.SalesTrend);
+        setUserDetails?.(cachedDashboardData.UserDetails);
+      }
       return;
     }
 
@@ -189,10 +200,16 @@ function DashboardScreen() {
       return;
     }
 
+    // Check if we have cached data - if yes, don't show loader (stale-while-revalidate)
+    const hasCachedData = cachedDashboardData !== null;
+
     try {
-      setIsloading(true);
+      // Only show loader if we don't have cached data
+      if (!hasCachedData) {
+        setIsloading(true);
+      }
       setHasFetchedDashboard(true);
-      console.log('Fetching dashboard data for userId:', userId);
+      console.log('Fetching dashboard data for userId:', userId, hasCachedData ? '(background refresh)' : '(initial load)');
 
       const graphData = await dashGraph({
         UserId: userId,
@@ -214,10 +231,21 @@ function DashboardScreen() {
         if (graphData.ConsentAppVersion) {
           setConsentAppVersion?.(graphData.ConsentAppVersion);
         }
+
+        // Cache the dashboard data for future use
+        setCachedDashboardDataAction?.({
+          SalesTrend: graphData.SalesTrend || [],
+          UserDetails: graphData.UserDetails?.[0] || null,
+          timestamp: new Date().toISOString(),
+        });
       }
     } catch (error) {
       writeErrorLog('getGraphData', error);
       console.error('Error fetching dashboard data:', error);
+      // On error, use cached data if available
+      if (cachedDashboardData) {
+        console.log('Using cached data due to fetch error');
+      }
     } finally {
       setIsloading(false);
     }

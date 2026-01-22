@@ -16,6 +16,7 @@ import {
   setApiVersion,
   setAppVersion,
   setCachedTeamSummary,
+  setCachedDashboardData,
 } from '../reducers/dashboardReducers';
 import type {RootState} from '../store';
 
@@ -56,6 +57,12 @@ type DashActionReturn = {
     date: string;
   } | null;
   setCachedTeamSummaryData: (payload: any) => void;
+  cachedDashboardData: {
+    SalesTrend: any;
+    UserDetails: any;
+    timestamp: string;
+  } | null;
+  setCachedDashboardDataAction: (payload: any) => void;
 };
 
 /**
@@ -127,6 +134,10 @@ export const useDashAction = (): DashActionReturn => {
     dispatch(setCachedTeamSummary(payload));
   }, [dispatch]);
 
+  const setCachedDashboardDataAction = useCallback((payload: any) => {
+    dispatch(setCachedDashboardData(payload));
+  }, [dispatch]);
+
   // Selectors
   const CollectionStatus = useSelector(
     (state: RootState) => state.dashReducer.CollectionStatus,
@@ -175,6 +186,10 @@ export const useDashAction = (): DashActionReturn => {
     (state: RootState) => state.dashReducer.cachedTeamSummary,
   );
 
+  const cachedDashboardData = useSelector(
+    (state: RootState) => state.dashReducer.cachedDashboardData,
+  );
+
   return {
     CollectionStatus,
     setCollectionData,
@@ -206,5 +221,7 @@ export const useDashAction = (): DashActionReturn => {
     setConsentAppVersion,
     ConsentApiVersion,
     ConsentAppVersion,
+    cachedDashboardData,
+    setCachedDashboardDataAction,
   };
 };

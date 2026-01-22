@@ -212,6 +212,10 @@ const TeamPerformanceReport = () => {
 
   /**
    * Fetch team performance summary from API
+   * Implements stale-while-revalidate pattern:
+   * - Show cached data immediately (no loader)
+   * - Fetch fresh data in background
+   * - Update when new data arrives
    */
   const fetchTeamSummary = useCallback(async (force = false) => {
     // Skip if already fetched for this date/report type (unless forced)
@@ -225,11 +229,28 @@ const TeamPerformanceReport = () => {
       return;
     }
 
+    // Check if we have matching cached data (same date and report type)
+    const hasCachedData = cachedTeamSummary !== null &&
+      cachedTeamSummary.date === selectedDate &&
+      cachedTeamSummary.isTeamReport === isTeamReport;
+
+    // If we have matching cached data, show it immediately
+    if (hasCachedData && cachedTeamSummary) {
+      setSummaryData([...cachedTeamSummary.data]);
+      setShowingCachedData(false); // Don't show "cached" banner for stale-while-revalidate
+    }
+
     if (isNetConnected === true || isNetConnected === null) {
-      setShowingCachedData(false);
       setIsPerformanceReportShown(false);
-      setIsLoading(true);
+
+      // Only show loader if we don't have cached data (stale-while-revalidate)
+      if (!hasCachedData) {
+        setIsLoading(true);
+      }
+
       setHasFetchedSummary(true);
+      console.log('Fetching team summary:', hasCachedData ? '(background refresh)' : '(initial load)');
+
       try {
         const data = await getTeamPerfomanceSummary(
           userId,
@@ -239,6 +260,7 @@ const TeamPerformanceReport = () => {
 
         if (data && Array.isArray(data)) {
           setSummaryData([...data]);
+          setShowingCachedData(false);
           // Cache the new data
           setCachedTeamSummaryData?.({
             data: [...data],
@@ -247,14 +269,18 @@ const TeamPerformanceReport = () => {
             date: selectedDate,
           });
         } else {
-          // Show empty state
-          setSummaryData([]);
+          // Show empty state only if no cached data
+          if (!hasCachedData) {
+            setSummaryData([]);
+          }
         }
       } catch (error) {
         writeErrorLog('fetchTeamSummary', error);
         console.error('Error fetching team summary:', error);
-        // Try to use cached data
-        handleOfflineMode();
+        // On error, keep showing cached data if available
+        if (!hasCachedData) {
+          handleOfflineMode();
+        }
       } finally {
         setIsLoading(false);
       }
@@ -262,7 +288,7 @@ const TeamPerformanceReport = () => {
       // Use cached data if available
       handleOfflineMode();
     }
-  }, [userId, selectedDate, isTeamReport, isNetConnected, hasFetchedSummary, setCachedTeamSummaryData]);
+  }, [userId, selectedDate, isTeamReport, isNetConnected, hasFetchedSummary, setCachedTeamSummaryData, cachedTeamSummary]);
 
   /**
    * Handle offline mode - use cached data

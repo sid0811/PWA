@@ -10,6 +10,13 @@ interface PerformanceItem {
   visitDate?: string;
 }
 
+// Cached dashboard data structure
+interface CachedDashboardData {
+  SalesTrend: any;
+  UserDetails: any;
+  timestamp: string;
+}
+
 type INITIALSTATE = {
   CollectionStatus: any;
   CollectionVisible: any;
@@ -32,6 +39,8 @@ type INITIALSTATE = {
     isTeamReport: boolean;
     date: string;
   } | null;
+  // Cached dashboard data for stale-while-revalidate pattern
+  cachedDashboardData: CachedDashboardData | null;
 };
 
 const INITIAL_STATE: INITIALSTATE = {
@@ -51,6 +60,7 @@ const INITIAL_STATE: INITIALSTATE = {
   ApiVersion: '',
   AppVersion: '',
   cachedTeamSummary: null,
+  cachedDashboardData: null,
 };
 
 const dashboardSlice = createSlice({
@@ -106,6 +116,9 @@ const dashboardSlice = createSlice({
     setCachedTeamSummary: (state, action) => {
       state.cachedTeamSummary = action.payload;
     },
+    setCachedDashboardData: (state, action) => {
+      state.cachedDashboardData = action.payload;
+    },
   },
 });
 
@@ -129,6 +142,7 @@ export const {
   setApiVersion,
   setAppVersion,
   setCachedTeamSummary,
+  setCachedDashboardData,
 } = actions;
 
 export default reducer;

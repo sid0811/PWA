@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import {useNavigate, useSearchParams} from 'react-router-dom';
+import {useNavigate, useSearchParams, useLocation} from 'react-router-dom';
 import {FiPackage, FiMapPin} from 'react-icons/fi';
 
 import {Loader} from '../../components';
@@ -54,11 +54,24 @@ const ReportConfig = {
 
 const NegativeShopReport: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const commandType = searchParams.get('type') || '3';
 
+  // Get the source tab from navigation state
+  const fromTab = (location.state as {fromTab?: string})?.fromTab;
+
   const {isNetConnected} = useNetInfo();
   const {userId} = useLoginAction();
+
+  // Handle back navigation - go to correct tab
+  const handleBack = useCallback(() => {
+    if (fromTab) {
+      navigate(`/dashboard?tab=${fromTab}`, {replace: true});
+    } else {
+      navigate(-1);
+    }
+  }, [navigate, fromTab]);
 
   const [data, setData] = useState<OutletData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -186,7 +199,7 @@ const NegativeShopReport: React.FC = () => {
 
       <ReportHeader
         title={config.title}
-        onBack={() => navigate(-1)}
+        onBack={handleBack}
         showSearch={true}
         searchText={searchText}
         onSearchChange={setSearchText}

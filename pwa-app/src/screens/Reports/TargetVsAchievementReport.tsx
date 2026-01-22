@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import {useNavigate, useSearchParams} from 'react-router-dom';
+import {useNavigate, useSearchParams, useLocation} from 'react-router-dom';
 
 import {Loader} from '../../components';
 import ReportHeader from '../../components/ReportHeader/ReportHeader';
@@ -45,11 +45,24 @@ const ReportConfig = {
 
 const TargetVsAchievementReport: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const commandType = searchParams.get('type') || '1';
 
+  // Get the source tab from navigation state
+  const fromTab = (location.state as {fromTab?: string})?.fromTab;
+
   const {isNetConnected} = useNetInfo();
   const {userId} = useLoginAction();
+
+  // Handle back navigation - go to correct tab
+  const handleBack = useCallback(() => {
+    if (fromTab) {
+      navigate(`/dashboard?tab=${fromTab}`, {replace: true});
+    } else {
+      navigate(-1);
+    }
+  }, [navigate, fromTab]);
 
   const [data, setData] = useState<TargetVsPerformance[]>([]);
   const [chartData, setChartData] = useState<{YTD: TransformedData[]; MTD: TransformedData[]}>({
@@ -319,7 +332,7 @@ const TargetVsAchievementReport: React.FC = () => {
     <div style={containerStyle}>
       <Loader visible={isLoading} />
 
-      <ReportHeader title={config.title} onBack={() => navigate(-1)} />
+      <ReportHeader title={config.title} onBack={handleBack} />
 
       <div style={contentStyle}>
         {config.subtitle && <div style={subtitleStyle}>{config.subtitle}</div>}

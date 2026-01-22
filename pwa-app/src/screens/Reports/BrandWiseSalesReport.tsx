@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useLocation} from 'react-router-dom';
 import moment from 'moment';
 
 import {Loader} from '../../components';
@@ -23,8 +23,21 @@ interface BrandWiseSalesData {
 
 const BrandWiseSalesReport: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {isNetConnected} = useNetInfo();
   const {userId} = useLoginAction();
+
+  // Get the source tab from navigation state
+  const fromTab = (location.state as {fromTab?: string})?.fromTab;
+
+  // Handle back navigation - go to correct tab
+  const handleBack = useCallback(() => {
+    if (fromTab) {
+      navigate(`/dashboard?tab=${fromTab}`, {replace: true});
+    } else {
+      navigate(-1);
+    }
+  }, [navigate, fromTab]);
 
   const [data, setData] = useState<BrandWiseSalesData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -177,7 +190,7 @@ const BrandWiseSalesReport: React.FC = () => {
 
       <ReportHeader
         title="Brand Wise Sales"
-        onBack={() => navigate(-1)}
+        onBack={handleBack}
         showSearch={true}
         searchText={searchText}
         onSearchChange={setSearchText}

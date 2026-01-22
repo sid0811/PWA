@@ -1,4 +1,5 @@
-import React, {useState, useMemo, useCallback} from 'react';
+import React, {useState, useMemo, useCallback, useEffect} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import * as FeatherIcons from 'react-icons/fi';
 import {DEFAULT_TAB_NAMES} from '../../constants/screenConstants';
 
@@ -75,15 +76,34 @@ const ToggleNavBar: React.FC<ToggleNavBarProps> = ({
   navItems,
   defaultTab = DEFAULT_TAB_NAMES[0],
 }) => {
-  const [activeTab, setActiveTab] = useState(() => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get initial tab from URL params or use default
+  const getInitialTab = () => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && navItems.some(item => item.id === tabFromUrl)) {
+      return tabFromUrl;
+    }
     return navItems.some(item => item.id === defaultTab)
       ? defaultTab
       : navItems[0]?.id || '';
-  });
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  // Sync tab state with URL params when URL changes (e.g., on back navigation)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && navItems.some(item => item.id === tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams, navItems]);
 
   const handlePress = useCallback((tabId: string) => {
     setActiveTab(tabId);
-  }, []);
+    // Update URL params without adding to history (replace)
+    setSearchParams({tab: tabId}, {replace: true});
+  }, [setSearchParams]);
 
   const ActiveComponent = useMemo(
     () => navItems.find(item => item.id === activeTab)?.component,

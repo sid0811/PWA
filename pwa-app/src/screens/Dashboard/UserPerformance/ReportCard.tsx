@@ -94,7 +94,8 @@ const ReportCard = () => {
 
   const handleCategoryClick = (category: (typeof ReportCategories)[0]) => {
     if (isNetConnected === true || isNetConnected === null) {
-      navigate(category.route);
+      // Pass source tab so we can navigate back to the correct tab
+      navigate(category.route, {state: {fromTab: 'my_perf_rep'}});
     } else {
       alert('No internet connection. Please connect to the internet for live updates.');
     }

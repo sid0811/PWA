@@ -1,5 +1,6 @@
 import React from 'react';
 import {useNavigate} from 'react-router-dom';
+import {useTranslation} from 'react-i18next';
 import {
   FiX,
   FiRefreshCw,
@@ -16,11 +17,15 @@ import {
   FiAlertTriangle,
   FiDatabase,
   FiCheckSquare,
+  FiDownload,
+  FiCheckCircle,
+  FiSmartphone,
 } from 'react-icons/fi';
 
 import {useLoginAction} from '../../redux/actionHooks/useLoginAction';
 import {useGlobleAction} from '../../redux/actionHooks/useGlobalAction';
 import {useDashAction} from '../../redux/actionHooks/useDashAction';
+import {usePWAInstall} from '../../hooks/usePWAInstall';
 import {isAccessControlProvided} from '../../utility/utils';
 import {AccessControlKeyConstants, VERSION_DETAIL} from '../../constants/screenConstants';
 import {Colors} from '../../theme/colors';
@@ -175,9 +180,11 @@ const defaultAccessKeys = [
 
 const Sidemenu: React.FC<SidemenuProps> = ({isOpen, onClose, onSync, onRefreshData}) => {
   const navigate = useNavigate();
+  const {t} = useTranslation();
   const {enteredUserName} = useLoginAction();
   const {setIsLogin, getAccessControlSettings} = useGlobleAction();
   const {base64} = useDashAction();
+  const {isInstalled, isInstallable, isIOS, promptInstall} = usePWAInstall();
 
   const handleLogout = () => {
     setIsLogin?.(false);
@@ -435,6 +442,57 @@ const Sidemenu: React.FC<SidemenuProps> = ({isOpen, onClose, onSync, onRefreshDa
             );
           })}
 
+          {/* Install App / Installed Indicator */}
+          {isInstalled ? (
+            <div
+              style={{
+                ...navItemStyle,
+                cursor: 'default',
+                backgroundColor: '#E8F5E9',
+              }}>
+              <FiCheckCircle size={22} color="#4CAF50" style={navIconStyle} />
+              <span style={{...navTextStyle, color: '#4CAF50', fontWeight: 'bold'}}>
+                {t('SideMenu.AppInstalled') || 'App Installed'}
+              </span>
+            </div>
+          ) : isInstallable ? (
+            <button
+              style={{
+                ...navItemStyle,
+                backgroundColor: '#FFF3E0',
+              }}
+              onClick={() => {
+                promptInstall();
+                if (!isIOS) {
+                  onClose();
+                }
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFE0B2';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFF3E0';
+              }}>
+              {isIOS ? (
+                <FiSmartphone size={22} color="#FF9800" style={navIconStyle} />
+              ) : (
+                <FiDownload size={22} color="#FF9800" style={navIconStyle} />
+              )}
+              <div style={{display: 'flex', flexDirection: 'column'}}>
+                <span style={{...navTextStyle, color: '#E65100', fontWeight: 'bold'}}>
+                  {t('SideMenu.InstallApp') || 'Install App'}
+                </span>
+                {isIOS && (
+                  <span style={{fontSize: 10, color: '#FF9800', marginTop: 2}}>
+                    {t('SideMenu.TapForInstructions') || 'Tap for instructions'}
+                  </span>
+                )}
+              </div>
+            </button>
+          ) : null}
+
+          <div style={dividerStyle} />
+
           {/* Logout */}
           <button
             style={navItemStyle}
@@ -446,7 +504,7 @@ const Sidemenu: React.FC<SidemenuProps> = ({isOpen, onClose, onSync, onRefreshDa
               e.currentTarget.style.backgroundColor = 'transparent';
             }}>
             <FiLogOut size={22} color={Colors.mainBackground} style={navIconStyle} />
-            <span style={navTextStyle}>Log Out</span>
+            <span style={navTextStyle}>{t('SideMenu.LogOut') || 'Log Out'}</span>
           </button>
         </nav>
 

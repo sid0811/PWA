@@ -1,5 +1,15 @@
 {
   "translation": {
+    "InstallPrompt": {
+      "Title": "Install ZyleminiPlus",
+      "Subtitle": "Add to Home Screen",
+      "Description": "Install this app on your device for quick access and a better experience. Works offline!",
+      "Benefit1": "Faster loading",
+      "Benefit2": "Works offline",
+      "Benefit3": "Home screen access",
+      "InstallButton": "Install Now",
+      "LaterButton": "Maybe Later"
+    },
     "Common": {
       "Hello": "Hello",
       "Confirm": "Confirm",
@@ -81,7 +91,10 @@
       "SideMenuCopyRights": "Ⓒ 2023 Smile Automation Pvt Ltd.",
       "SyncData": "Sync Data",
       "POD": "Proof of Delivery",
-      "ReportError": "Report Error"
+      "ReportError": "Report Error",
+      "InstallApp": "Install App",
+      "AppInstalled": "App Installed",
+      "TapForInstructions": "Tap for instructions"
     },
     "Shops": {
       "TodayRoute": "TODAY'S ROUTE",

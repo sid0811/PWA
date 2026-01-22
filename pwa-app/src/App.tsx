@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useGlobalAction } from './redux/actionHooks/useGlobalAction';
 import Routes from './navigation/Routes';
 import { useNetInfo } from './hooks/useNetInfo';
+import InstallPrompt from './components/InstallPrompt/InstallPrompt';
 import './styles/App.css';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
         </div>
       )}
       <Routes />
+      <InstallPrompt />
     </div>
   );
 }
